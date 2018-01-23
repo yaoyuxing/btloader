@@ -1,5 +1,5 @@
-..\obj\ymodem.o: ..\Ymode\ymodem.c
-..\obj\ymodem.o: ..\Ymode\ymodem.h
+..\obj\ymodem.o: ..\Ymodem\ymodem.c
+..\obj\ymodem.o: ..\Ymodem\ymodem.h
 ..\obj\ymodem.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 ..\obj\ymodem.o: ..\Update\ble_update.h
 ..\obj\ymodem.o: ..\USER\stm32f7xx.h
@@ -77,7 +77,7 @@
 ..\obj\ymodem.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_dfsdm.h
 ..\obj\ymodem.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_jpeg.h
 ..\obj\ymodem.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_mdios.h
-..\obj\ymodem.o: ..\F769_USART\UART\uart.h
+..\obj\ymodem.o: ..\F769_USART\uart.h
 ..\obj\ymodem.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal.h
 ..\obj\ymodem.o: ..\BleTooth\ble_tooth.h
 ..\obj\ymodem.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h

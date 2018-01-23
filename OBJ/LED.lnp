@@ -39,7 +39,7 @@
 "..\obj\diskio.o"
 "..\obj\ffsystem.o"
 "..\obj\ffunicode.o"
-"..\obj\interflash_1.o"
+"..\obj\interflash.o"
 "..\obj\ymodem.o"
 "..\obj\ble_update.o"
 "..\obj\bootloader.o"

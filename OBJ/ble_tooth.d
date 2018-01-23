@@ -78,11 +78,11 @@
 ..\obj\ble_tooth.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_dfsdm.h
 ..\obj\ble_tooth.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_jpeg.h
 ..\obj\ble_tooth.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_mdios.h
-..\obj\ble_tooth.o: ..\F769_USART\UART\uart.h
+..\obj\ble_tooth.o: ..\F769_USART\uart.h
 ..\obj\ble_tooth.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal.h
 ..\obj\ble_tooth.o: ..\SYSTEM\delay\delay.h
 ..\obj\ble_tooth.o: ..\SYSTEM\sys\sys.h
 ..\obj\ble_tooth.o: ..\CORE\core_cm7.h
 ..\obj\ble_tooth.o: ..\Update\bootloader.h
-..\obj\ble_tooth.o: ..\Ymode\ymodem.h
+..\obj\ble_tooth.o: ..\Ymodem\ymodem.h
 ..\obj\ble_tooth.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h

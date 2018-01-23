@@ -77,10 +77,10 @@
 ..\obj\system_info.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_dfsdm.h
 ..\obj\system_info.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_jpeg.h
 ..\obj\system_info.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_mdios.h
-..\obj\system_info.o: ..\F769_USART\UART\uart.h
+..\obj\system_info.o: ..\F769_USART\uart.h
 ..\obj\system_info.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal.h
 ..\obj\system_info.o: ..\BleTooth\ble_tooth.h
-..\obj\system_info.o: ..\Ymode\ymodem.h
+..\obj\system_info.o: ..\Ymodem\ymodem.h
 ..\obj\system_info.o: ..\InterFlash\interflash.h
 ..\obj\system_info.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 ..\obj\system_info.o: ..\InterFlash\system_info.h

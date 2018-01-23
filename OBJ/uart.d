@@ -1,5 +1,5 @@
-..\obj\uart.o: ..\F769_USART\UART\uart.c
-..\obj\uart.o: ..\F769_USART\UART\uart.h
+..\obj\uart.o: ..\F769_USART\uart.c
+..\obj\uart.o: ..\F769_USART\uart.h
 ..\obj\uart.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal.h
 ..\obj\uart.o: ..\USER\stm32f7xx_hal_conf.h
 ..\obj\uart.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_rcc.h

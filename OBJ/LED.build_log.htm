@@ -21,23 +21,29 @@ Target DLL:      Segger\JL2CM3.dll V2.99.26.0
 Dialog DLL:      TCM.DLL V1.32.0.0
  
 <h2>Project:</h2>
-E:\SkyLin\proj\bootloader\USER\FreeRTOS.uvprojx
-Project File Date:  01/22/2018
+E:\SkyLin\proj\project\bootloader\USER\FreeRTOS.uvprojx
+Project File Date:  01/23/2018
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 5 (build 528)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'BootLoader'
-compiling system_info.c...
-..\InterFlash\system_info.c(207): warning:  #177-D: variable "punMask"  was declared but never referenced
-  	unsigned int  punMask=gstSystemInfo.unPosMask;
-..\InterFlash\system_info.c(254): warning:  #177-D: variable "punMask"  was declared but never referenced
-  	unsigned int  punMask=gstSystemInfo.unPosMask;
-..\InterFlash\system_info.c: 2 warnings, 0 errors
+compiling ble_update.c...
+..\Update\ble_update.c(48): warning:  #177-D: variable "TimeOut"  was declared but never referenced
+  	unsigned int TimeOut=0xe000000;  
+..\Update\ble_update.c(139): warning:  #186-D: pointless comparison of unsigned integer with zero
+  					if((ucTimes>=0)&&(gBleCurrentMode==BLE_PENETRATE_TRANS_MODE))
+..\Update\ble_update.c(304): warning:  #940-D: missing return statement at end of non-void function "BleBaudSet" 
+  } 
+..\Update\ble_update.c(334): warning:  #177-D: variable "len"  was declared but never referenced
+  	unsigned short len =0;
+..\Update\ble_update.c(86): warning:  #177-D: function "BleInit"  was declared but never referenced
+  static void BleInit(void)
+..\Update\ble_update.c: 5 warnings, 0 errors
 linking...
-Program Size: Code=30260 RO-data=980 RW-data=1228 ZI-data=272060  
+Program Size: Code=29804 RO-data=980 RW-data=1228 ZI-data=272060  
 FromELF: creating hex file...
 After Build - User command #1: D:\Program Files (X86)\ARM\ARMCC\bin\fromelf.exe  --bin -o  ../BIN/stm32f7_FreeRTOS.bin  ../OBJ/LED.axf
-"..\OBJ\LED.axf" - 0 Error(s), 2 Warning(s).
+"..\OBJ\LED.axf" - 0 Error(s), 5 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -59,7 +65,7 @@ Package Vendor: Keil
 <h2>Collection of Component Files used:</h2>
 
    * Component: ::CMSIS Driver:Flash:2.1.0 (API)
-Build Time Elapsed:  00:00:06
+Build Time Elapsed:  00:00:07
 </pre>
 </body>
 </html>

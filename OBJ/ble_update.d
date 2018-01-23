@@ -76,7 +76,7 @@
 ..\obj\ble_update.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_dfsdm.h
 ..\obj\ble_update.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_jpeg.h
 ..\obj\ble_update.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_mdios.h
-..\obj\ble_update.o: ..\F769_USART\UART\uart.h
+..\obj\ble_update.o: ..\F769_USART\uart.h
 ..\obj\ble_update.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal.h
 ..\obj\ble_update.o: ..\BleTooth\ble_tooth.h
 ..\obj\ble_update.o: ..\InterFlash\system_info.h
@@ -95,6 +95,6 @@
 ..\obj\ble_update.o: ..\SYSTEM\delay\delay.h
 ..\obj\ble_update.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 ..\obj\ble_update.o: ..\Update\bootloader.h
-..\obj\ble_update.o: ..\Ymode\ymodem.h
+..\obj\ble_update.o: ..\Ymodem\ymodem.h
 ..\obj\ble_update.o: ..\InterFlash\interflash.h
 ..\obj\ble_update.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h

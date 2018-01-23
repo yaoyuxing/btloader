@@ -77,10 +77,10 @@
 ..\obj\bootloader.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_dfsdm.h
 ..\obj\bootloader.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_jpeg.h
 ..\obj\bootloader.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_mdios.h
-..\obj\bootloader.o: ..\F769_USART\UART\uart.h
+..\obj\bootloader.o: ..\F769_USART\uart.h
 ..\obj\bootloader.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal.h
 ..\obj\bootloader.o: ..\BleTooth\ble_tooth.h
-..\obj\bootloader.o: ..\Ymode\ymodem.h
+..\obj\bootloader.o: ..\Ymodem\ymodem.h
 ..\obj\bootloader.o: ..\FATFS\source\ff.h
 ..\obj\bootloader.o: ..\FATFS\source\integer.h
 ..\obj\bootloader.o: ..\FATFS\source\ffconf.h

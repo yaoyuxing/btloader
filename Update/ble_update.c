@@ -49,8 +49,7 @@ static void BleTask(void* param)
 	#if 0
 	BleInit();    //初始化蓝牙模块 
 	#else
-	BleUartInit(115200);                    //串口波特率设置为上次存入的波特率 
-	BleSendStr("sadsad");
+	BleUartInit(115200);                    //串口波特率设置为上次存入的波特率  
 	gBleConnectStatus=SET;
 	//RunAPP(gstUpdate.unCurrentAppADDR);           //跳转APP
 	#endif
@@ -342,7 +341,7 @@ static void BleGetFireInfo(void)
 	,gstUpdate.stFireInfo.HardVersion\
 	,gstUpdate.stFireInfo.FireVersion\
 	,gstUpdate.stFireInfo.Time);  
-	BleSend2Phone(pdata); 
+	BleSend2Phone(pdata,strlen(pdata)); 
 	free(pSendStr);
 	free(pdata);
 	pSendStr=NULL;
@@ -410,61 +409,71 @@ static void BleAnalysisData(char *pData,unsigned int Len)
 } 
 #define SEND_2PHONE_BUF_MAX   1024
 
-void str_esc(char *pReturn,char*pSource,char target1,char target2)
+int  str_esc(char *pReturn,char*pSource,char target1,char target2,unsigned int len )
 {
-	while(*pSource!='\0')
+	unsigned int nreturn=0;
+	while(len--)
 	{
-		if(*pSource++==target1)
+		if(*pSource==target1)
 		{
 			*pReturn++=ESCAPE_CHAR;
 			*pReturn++=(*pSource)^XOR_CHAR;
+			nreturn++;
+			pSource++;
 		}
-		else if(*pSource++==target2)
+		else if(*pSource==target2)
 		{
 			*pReturn++=ESCAPE_CHAR;
 			*pReturn++=(*pSource)^XOR_CHAR;
+			nreturn++;
+			pSource++;
 		}
-		else if(*pSource++==ESCAPE_CHAR)
+		else if(*pSource==ESCAPE_CHAR)
 		{
 			*pReturn++=ESCAPE_CHAR;
 			*pReturn++=(*pSource)^XOR_CHAR;
+			nreturn++;
+			pSource++;
 		}
 		else 
 		{
 			*pReturn++=*pSource++;
 		}
+		nreturn++;
 	}
+	return nreturn;
 }
 
 /**
   * @brief  发送数据到手机蓝牙
   * @note   数据进行转义校验加帧头尾进行发送
-  * @param  pData: 发送字符串
+  * @param  pData: 数据指针
+  * @param  len: 数据长度
   */
-void BleSend2Phone(char *pData)
+void BleSend2Phone(char *pData,unsigned int len )
 { 
 	char cDataBuf[SEND_2PHONE_BUF_MAX]={0};
-	unsigned short len =0,crc16=0;
-	char cLen[3]={0};  
-	len=strlen(pData);                     //获取长度
+	char cDataBufTemp[SEND_2PHONE_BUF_MAX]={0};
+	char cHead=BLE_FRAME_HEAD_STR,cTail=BLE_FRAME_TAIL_STR;
+	unsigned short  crc16=0,sendlen; 
 	crc16=bt_crc16((uint8_t*)pData,len);   //计算校验
-	str_esc(cDataBuf,pData,BLE_FRAME_HEAD_STR,BLE_FRAME_TAIL_STR); //对数据中和帧尾字符相同的进行转义
-	strcpy(pData,cDataBuf);                 //更新数据
-	memset(cDataBuf,0,SEND_2PHONE_BUF_MAX); 
-	cLen[0]=len&0x00ff;          //取低字节
-	cLen[1]=len>>8;          //取高字节
-	memset(cLen,0,3);
-	cLen[0]=BLE_FRAME_HEAD_STR ;//取头
-	strcat(cDataBuf,cLen);       //拼接头
-	strcat(cDataBuf,cLen);       //拼len字节 
-	strcat(cDataBuf,pData);      //拼接数据 
-	cLen[0]=crc16&0x00ff;
-	cLen[1]=crc16>>8;
-	strcat(cDataBuf,cLen);      //拼接校验
-	memset(cLen,0,3);
-	cLen[0]=BLE_FRAME_TAIL_STR ;//取尾
-	strcat(cDataBuf,cLen);      //拼接帧尾
-	BleSendStr(cDataBuf);//发送
+	
+	//cTemp[0]=BLE_FRAME_HEAD_STR ;//取头 
+	cDataBufTemp[1]=len&0x00ff;          //取低字节
+	cDataBufTemp[0]=len>>8;          //取高字节  
+	
+	memcpy((char *)&cDataBufTemp[2],pData,len);                 //拼接数据 
+	
+	cDataBufTemp[2+len+1]=crc16&0x00ff;          //取低字节
+	cDataBufTemp[2+len]=crc16>>8;          //取高字节  
+	
+	sendlen=str_esc(cDataBuf,cDataBufTemp,BLE_FRAME_HEAD_STR,BLE_FRAME_TAIL_STR,len+4); //对数据中和帧尾字符相同的进行转义
+	
+	BleSendByte(cHead); //发送头
+	BleSendBytes((unsigned char *)cDataBuf,sendlen);//发送 
+	BleSendByte(cTail);//发送尾
+	
+	
 }
 
 

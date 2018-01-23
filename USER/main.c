@@ -52,12 +52,10 @@ int main(void)
 	Stm32_Clock_Init(432,25,2,9);   //设置时钟,216Mhz 
 	delay_init(216);                //延时初始化
 	BSP_NOR_Init();  
-	InterFlash_EraseSector(SYSTEM_INIT_INFO_ADDR,1);          //擦拭  
+	//InterFlash_EraseSector(SYSTEM_INIT_INFO_ADDR,1);          //擦拭  
 	SystemInfoInit_BtLoader();
-	RefreshSysInfo();
-	
-	memcpy(gstUpdate.stFireInfo.FireVersion,"abcde",5);
-	SaveSysInfo();
+	RefreshSysInfo(); 
+
 //	 delay_ms(1000);
 //	memcpy(gstUpdate.stFireInfo.FireVersion,"abcde",5);
 //	SaveSysInfo();
@@ -73,7 +71,7 @@ int main(void)
 //	SaveSysInfo();
 //	RefreshSysInfo();
 //	}
-	CheckUpdateStatus();	 
+	//CheckUpdateStatus();	 
 	
     //创建开始任务
 	xTaskCreate((TaskFunction_t ) start_task,            //任务函数

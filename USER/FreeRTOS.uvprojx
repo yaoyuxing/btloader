@@ -336,7 +336,7 @@
               <MiscControls>--c99</MiscControls>
               <Define>STM32F769xx,USE_HAL_DRIVER,ARM_MATH_CM7,__CC_ARM,ARM_MATH_MATRIX_CHECK,ARM_MATH_ROUNDING</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\OBJ;..\USER;..\HALLIB\STM32F7xx_HAL_Driver\Inc;..\SYSTEM\delay;..\SYSTEM\sys;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM7\r0p1;..\NorFlash;..\FATFS\source;..\InterFlash;..\F769_USART\UART;..\Ymode;..\Update;..\BleTooth</IncludePath>
+              <IncludePath>..\CORE;..\OBJ;..\USER;..\HALLIB\STM32F7xx_HAL_Driver\Inc;..\SYSTEM\delay;..\SYSTEM\sys;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM7\r0p1;..\NorFlash;..\FATFS\source;..\InterFlash;..\F769_USART;..\Ymodem;..\Update;..\BleTooth</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -608,12 +608,12 @@
             <File>
               <FileName>uart.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\F769_USART\UART\uart.c</FilePath>
+              <FilePath>..\F769_USART\uart.c</FilePath>
             </File>
             <File>
               <FileName>uart.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\F769_USART\UART\uart.h</FilePath>
+              <FilePath>..\F769_USART\uart.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -668,17 +668,17 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>Ymode</GroupName>
+          <GroupName>Ymodem</GroupName>
           <Files>
             <File>
               <FileName>ymodem.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Ymode\ymodem.c</FilePath>
+              <FilePath>..\Ymodem\ymodem.c</FilePath>
             </File>
             <File>
               <FileName>ymodem.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\Ymode\ymodem.h</FilePath>
+              <FilePath>..\Ymodem\ymodem.h</FilePath>
             </File>
           </Files>
         </Group>

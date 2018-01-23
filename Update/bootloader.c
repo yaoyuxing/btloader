@@ -88,7 +88,7 @@ void UpdateInit_App(void)
 			gstUpdate.eAppUpdateStatus=USR1_UPDATE_FINISH;      //升级成功
 			SaveSysInfo();   
 			temp[0]=UPDATE_SUCCEED_ACK_BYTE;
-			BleSend2Phone(temp);
+			BleSend2Phone(temp,1);
 		}
 	} 
 	else if(gstUpdate.eAppUpdateStatus==USR2_START_UPDATE)// usr2升级
@@ -98,7 +98,7 @@ void UpdateInit_App(void)
 			gstUpdate.eAppUpdateStatus=USR2_UPDATE_FINISH;  //升级成功
 			SaveSysInfo();
 			temp[0]=UPDATE_SUCCEED_ACK_BYTE;
-			BleSend2Phone(temp);
+			BleSend2Phone(temp,1);
 		}
 	}
 }

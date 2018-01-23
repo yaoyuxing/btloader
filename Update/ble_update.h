@@ -129,7 +129,7 @@ extern    stBleDataType  gstBleData;
 
 
 void CreateBleTask(void);
-void BleSend2Phone(char *pData);
+void BleSend2Phone(char *pData,unsigned int len );
 #endif
 
 

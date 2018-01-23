@@ -78,7 +78,7 @@
 ..\obj\stm32f7xx_it.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_jpeg.h
 ..\obj\stm32f7xx_it.o: ..\HALLIB\STM32F7xx_HAL_Driver\Inc\stm32f7xx_hal_mdios.h
 ..\obj\stm32f7xx_it.o: stm32f7xx_it.h
-..\obj\stm32f7xx_it.o: ..\F769_USART\UART\uart.h
+..\obj\stm32f7xx_it.o: ..\F769_USART\uart.h
 ..\obj\stm32f7xx_it.o: ..\FreeRTOS\include\FreeRTOS.h
 ..\obj\stm32f7xx_it.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
 ..\obj\stm32f7xx_it.o: ..\FreeRTOS\include\FreeRTOSConfig.h

@@ -97,11 +97,11 @@
 ..\obj\main.o: ..\FreeRTOS\include\queue.h
 ..\obj\main.o: ..\NorFlash\my_norflash.h
 ..\obj\main.o: ..\InterFlash\interflash.h
-..\obj\main.o: ..\F769_USART\UART\uart.h
+..\obj\main.o: ..\F769_USART\uart.h
 ..\obj\main.o: ..\Update\LocalUart.h
 ..\obj\main.o: ..\Update\bootloader.h
 ..\obj\main.o: ..\Update\ble_update.h
 ..\obj\main.o: ..\BleTooth\ble_tooth.h
-..\obj\main.o: ..\Ymode\ymodem.h
+..\obj\main.o: ..\Ymodem\ymodem.h
 ..\obj\main.o: ..\InterFlash\system_info.h
 ..\obj\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
