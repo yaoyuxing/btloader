@@ -27,7 +27,7 @@
 
  stSystemInformationType gstSystemInfo ={ .unPosMask=0x12340000 } ; //系统信息结构体
  
-#define  SYS_INFO_SECTOR_CNT_MAX           gstSystemInfo.unBlockDevideCntAmount             //128k分的sector数量
+#define  SYS_INFO_SECTOR_CNT_MAX          5// gstSystemInfo.unBlockDevideCntAmount             //128k分的sector数量
 #define  SYS_INFO_SECTOR_SIZE 	           gstSystemInfo.unInfoSingleSize                   //每个sector大小
 #define  APP_SYS_INFO_SIZE 	               gstSystemInfo.unAppSysInfoSize                    //APP部分数据长度
 #define  BOOT_SYS_INFO_SIZE                 BOOT_LOADER_SYS_INFO_SIZE                // (gstSystemInfo.unBtLoaderSysInfoSize) //10// BOOT_LOADER_SYS_INFO_SIZE 
@@ -48,7 +48,7 @@ static void RefreshCurrentRam(void);
   */
 static void EraseSysInfoBlock(void)                    
 {
-	InterFlash_EraseSector(SYSTEM_INIT_INFO_ADDR,1);         
+	InterFlash_EraseSector(SYSTEM_INIT_INFO_ADDR,NV_SIZE_MAX);         
 }
 /**
   * @brief  更新备份系统信息到RAM并重新备份存储，在初始化后使用
@@ -133,19 +133,19 @@ static void SaveSysInfoBackup(void)                            //擦拭保存备份
 	//写当前数据
 	for(cnt=0,pData=(void*)&gstSystemInfo;cnt<SYS_INFO_CTRL_STRUCT_SIZE ;cnt++) //写入控制结构体数据
 	{
-		HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,unAddr,*pData); //写入当前数据 
+		while(HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,unAddr,*pData) !=HAL_OK);  //写入当前数据 
 		unAddr++;                                     //地址偏移
 		pData++;
 	}
 	for(cnt=0,pData=gstSystemInfo.pucBtLoaderSysInfo;cnt<BOOT_SYS_INFO_SIZE ;cnt++) //写入bootloader部分数据
 	{
-		HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,unAddr,*pData); //写入当前数据 
+		while(HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,unAddr,*pData) !=HAL_OK);  //写入当前数据 
 		unAddr++;                                     //地址偏移
 		pData++;
 	}  
 	for(cnt=0,pData=gstSystemInfo.pucAppSysInfo;cnt<APP_SYS_INFO_SIZE;cnt++)     //写入APP部分数据
 	{
-		HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,unAddr,*pData); //写入当前数据 
+		while(HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,unAddr,*pData) !=HAL_OK);  //写入当前数据 
 		unAddr++;                                     //地址偏移
 		pData++;
 	} 
@@ -176,19 +176,19 @@ void SaveSysInfo(void)
 		HAL_FLASH_Unlock();                                //解锁可写 
 		for(cnt=0,pData=(void*)&gstSystemInfo;cnt<SYS_INFO_CTRL_STRUCT_SIZE ;cnt++)//写入当前数据 
 		{
-			HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,unAddr,*pData); 
+			while(HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,unAddr,*pData) !=HAL_OK); 
 			unAddr++;                                      
 			pData++;
 		}
 		for(cnt=0,pData=gstSystemInfo.pucBtLoaderSysInfo;cnt<BOOT_SYS_INFO_SIZE ;cnt++)  
 		{
-			HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,unAddr,*pData);
+			while(HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,unAddr,*pData) !=HAL_OK); 
 			unAddr++;                                     
 			pData++;
 		}  
 		for(cnt=0,pData=gstSystemInfo.pucAppSysInfo;cnt<APP_SYS_INFO_SIZE;cnt++) 
 		{
-			HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,unAddr,*pData); 
+			while(HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE,unAddr,*pData) !=HAL_OK); 
 			unAddr++;                                    
 			pData++;
 		} 
@@ -348,7 +348,7 @@ void SystemInfoInit_BtLoader(void)
   */
 void SystemInfoInit_App(void * pAppSysInfo,unsigned int len)               //App 调用系统信息初始化
 {
-  //	InterFlash_SetBankMode(SINGLE_BANK_MODE); //设置为single bank mode  
+  	//InterFlash_SetBankMode(SINGLE_BANK_MODE); //设置为single bank mode  
 	
 	gstSystemInfo.unBtLoaderSysInfoSize=0;
 	gstSystemInfo.unAppSysInfoSize=0; 

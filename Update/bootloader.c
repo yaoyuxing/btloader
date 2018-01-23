@@ -15,12 +15,12 @@ void CheckUpdateStatus(void)
 	{
 		case  USR1_UPDATE_FINISH: 
 			 gstUpdate.eAppUpdateStatus=NO_UPDATE;
-		   SaveSysInfo();
+				SaveSysInfo();
 		 // RunAPP(gstUpdate.unCurrentAppADDR);
 			break;
 		case  USR2_UPDATE_FINISH: 
 			gstUpdate.eAppUpdateStatus=NO_UPDATE;
-		  SaveSysInfo();
+			SaveSysInfo();
 		//  RunAPP(gstUpdate.unCurrentAppADDR);
 			break;
 		case  USR1_START_UPDATE:

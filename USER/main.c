@@ -51,11 +51,26 @@ int main(void)
 	HAL_Init();                     //初始化HAL库   
 	Stm32_Clock_Init(432,25,2,9);   //设置时钟,216Mhz 
 	delay_init(216);                //延时初始化
-	BSP_NOR_Init();  
-	//InterFlash_EraseSector(SYSTEM_INIT_INFO_ADDR,1);          //擦拭  
+	BSP_NOR_Init(); 
+	InterFlash_SetBankMode(SINGLE_BANK_MODE); //设置为single bank mode  	
 	SystemInfoInit_BtLoader();
-	RefreshSysInfo(); 
-
+	RefreshSysInfo();  
+	while(1)
+	{
+		memcpy((void *)gstUpdate.stFireInfo.FireVersion,"1.0.0",5);
+		SaveSysInfo();
+		RefreshSysInfo(); 
+		memcpy((void *)gstUpdate.stFireInfo.FireVersion,"1.0.1",5);
+		SaveSysInfo();
+		RefreshSysInfo();
+		memcpy((void *)gstUpdate.stFireInfo.FireVersion,"1.0.2",5);
+		SaveSysInfo();
+		RefreshSysInfo();
+		//RefreshSysInfoBackup();	
+	}
+	
+	
+	
 //	 delay_ms(1000);
 //	memcpy(gstUpdate.stFireInfo.FireVersion,"abcde",5);
 //	SaveSysInfo();
@@ -71,7 +86,7 @@ int main(void)
 //	SaveSysInfo();
 //	RefreshSysInfo();
 //	}
-	//CheckUpdateStatus();	 
+	CheckUpdateStatus();	 
 	
     //创建开始任务
 	xTaskCreate((TaskFunction_t ) start_task,            //任务函数

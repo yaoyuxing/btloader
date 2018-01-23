@@ -46,6 +46,8 @@ void CreateBleTask(void)
 static void BleTask(void* param)
 {  
 	unsigned int TimeOut=0xe000000;  
+	BleUartInit(19200);                    //串口波特率设置为上次存入的波特率 
+	BleToothSendCmd(BL_MAC,BLE_CMD_READ,"");
 	#if 0
 	BleInit();    //初始化蓝牙模块 
 	#else
@@ -230,6 +232,7 @@ static eBleErrorType BleBaudSet(unsigned int Baud)
 		gBleBaud=BLE_DEFAULT_BAUD;//设置为蓝牙默认波特率
 	}	
 	BleUartInit(gBleBaud);                    //串口波特率设置为上次存入的波特率
+	
 	if(gBleBaud==BLE_PENETRATE_MODE_BAUD)      //已经设置成透传波特率
 	{
 		while(ucTimes--)                          //退出透传进入命令模式

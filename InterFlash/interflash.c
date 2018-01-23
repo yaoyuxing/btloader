@@ -64,6 +64,16 @@ static unsigned int  GetSectorAddr(unsigned int useraddr)
 	return sector;
 } 
 
+static int  CheckErase(unsigned int addr ,unsigned int len)
+{
+	unsigned int cnt =len;
+	while(cnt--)
+	{ 
+		if((*(uint8_t *)addr++)!=0xff) return 1;
+	}
+	return 0;
+}
+
 /**
   * @brief  擦拭内部flash 
   * @note   以sector为单位，擦拭起始sector到offset偏移位置sector
@@ -77,19 +87,33 @@ int InterFlash_EraseSector(unsigned int  Addr,unsigned int offset)
 {
 	FLASH_EraseInitTypeDef   EraseInitStruct;
 	unsigned int ErseError,FirstSector,NbOfSectors;
-	
+	unsigned char  ucTryTimes=2;
 	FirstSector=GetSectorAddr(Addr);                        //获取sector
 	NbOfSectors=GetSectorAddr(Addr+offset)-FirstSector;    //获取需要擦拭sector个数
 	EraseInitStruct.TypeErase     = FLASH_TYPEERASE_SECTORS;
 	EraseInitStruct.VoltageRange  = FLASH_VOLTAGE_RANGE_3;
 	EraseInitStruct.Sector        = FirstSector;
 	EraseInitStruct.NbSectors     = NbOfSectors;
-	HAL_FLASH_Unlock();                                      //解除flash保护
-	HAL_FLASHEx_Erase(&EraseInitStruct,&ErseError);         //擦拭sector
-	HAL_FLASH_Lock();                                       //锁定flash
 	
-	return ErseError;
+	HAL_FLASH_Unlock();                                      //解除flash保护
+	while(HAL_FLASHEx_Erase(&EraseInitStruct,&ErseError) !=HAL_OK); //擦拭sector  
+	HAL_FLASH_Lock();                                       //锁定flash
+	while(ucTryTimes--)
+	{
+		if(CheckErase(Addr,offset)==1) 
+		{
+			HAL_FLASH_Unlock();                                      //解除flash保护
+			while(HAL_FLASHEx_Erase(&EraseInitStruct,&ErseError) !=HAL_OK); //擦拭sector  
+			HAL_FLASH_Lock(); 
+		}
+		else 
+		{
+			return 0;
+		}
+	} 
+	return 1;
 }
+
 /**
   * @brief  内部flash写 
   * @note   内部flash写可以以byte halfword word double word形式写入

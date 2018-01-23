@@ -191,7 +191,7 @@ HAL_StatusTypeDef HAL_FLASH_Program(uint32_t TypeProgram, uint32_t Address, uint
 
   /* Wait for last operation to be completed */
   status = FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE);
-  //status=HAL_OK;
+ // status=HAL_OK;
   if(status == HAL_OK)
   {
     switch(TypeProgram)
