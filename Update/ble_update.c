@@ -390,6 +390,7 @@ static void BleUpdateApp(void)
 	SaveSysInfo();//存储状态信息
 	RefreshSysInfo();
 	InterFlash_Program(gstUpdate.unCurrentAppADDR,pData,gstUpdate.unCurrentAppSize, FLASH_TYPEPROGRAM_BYTE);//写入APP
+	//BleDelay_ms(1000);
 	RunAPP(gstUpdate.unCurrentAppADDR);           //跳转APP
 }
 /*

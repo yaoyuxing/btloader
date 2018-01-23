@@ -686,6 +686,16 @@
           <GroupName>LocalUartUpdate</GroupName>
           <Files>
             <File>
+              <FileName>ble_tooth.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\BleTooth\ble_tooth.h</FilePath>
+            </File>
+            <File>
+              <FileName>ble_tooth.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\BleTooth\ble_tooth.c</FilePath>
+            </File>
+            <File>
               <FileName>ble_update.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\Update\ble_update.h</FilePath>
@@ -729,18 +739,6 @@
         </Group>
         <Group>
           <GroupName>BleTooth</GroupName>
-          <Files>
-            <File>
-              <FileName>ble_tooth.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\BleTooth\ble_tooth.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_tooth.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\BleTooth\ble_tooth.h</FilePath>
-            </File>
-          </Files>
         </Group>
       </Groups>
     </Target>

@@ -3,7 +3,7 @@
 <title>Static Call Graph - [..\OBJ\LED.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image ..\OBJ\LED.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Tue Jan 23 11:43:07 2018
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Tue Jan 23 13:38:18 2018
 <BR><P>
 <H3>Maximum Stack Usage =       2184 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -823,7 +823,7 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[e8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_IRQHandler
 </UL>
 
-<P><STRONG><a name="[c7]"></a>HAL_FLASHEx_Erase</STRONG> (Thumb, 164 bytes, Stack size 24 bytes, stm32f7xx_hal_flash_ex.o(i.HAL_FLASHEx_Erase))
+<P><STRONG><a name="[c7]"></a>HAL_FLASHEx_Erase</STRONG> (Thumb, 162 bytes, Stack size 24 bytes, stm32f7xx_hal_flash_ex.o(i.HAL_FLASHEx_Erase))
 <BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = HAL_FLASHEx_Erase &rArr; FLASH_WaitForLastOperation
 </UL>
 <BR>[Calls]<UL><LI><a href="#[c2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;FLASH_WaitForLastOperation
@@ -852,7 +852,7 @@ Global Symbols
 <LI><a href="#[c1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;InterFlash_EraseSector
 </UL>
 
-<P><STRONG><a name="[d0]"></a>HAL_FLASH_Program</STRONG> (Thumb, 156 bytes, Stack size 24 bytes, stm32f7xx_hal_flash.o(i.HAL_FLASH_Program))
+<P><STRONG><a name="[d0]"></a>HAL_FLASH_Program</STRONG> (Thumb, 152 bytes, Stack size 24 bytes, stm32f7xx_hal_flash.o(i.HAL_FLASH_Program))
 <BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = HAL_FLASH_Program &rArr; FLASH_WaitForLastOperation
 </UL>
 <BR>[Calls]<UL><LI><a href="#[d3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;FLASH_Program_Word
@@ -2445,7 +2445,7 @@ Local Symbols
 <BR>[Called By]<UL><LI><a href="#[7a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BleTask
 </UL>
 
-<P><STRONG><a name="[ae]"></a>BleUpdateApp</STRONG> (Thumb, 254 bytes, Stack size 16 bytes, ble_update.o(i.BleUpdateApp))
+<P><STRONG><a name="[ae]"></a>BleUpdateApp</STRONG> (Thumb, 256 bytes, Stack size 16 bytes, ble_update.o(i.BleUpdateApp))
 <BR><BR>[Stack]<UL><LI>Max Depth = 1208<LI>Call Chain = BleUpdateApp &rArr; Ymodem_Receive &rArr; atoi &rArr; strtol &rArr; _strtoul
 </UL>
 <BR>[Calls]<UL><LI><a href="#[b9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;RefreshSysInfo

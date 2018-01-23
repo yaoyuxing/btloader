@@ -179,7 +179,7 @@ HAL_StatusTypeDef HAL_FLASHEx_Erase(FLASH_EraseInitTypeDef *pEraseInit, uint32_t
 
   /* Wait for last operation to be completed */
   status = FLASH_WaitForLastOperation((uint32_t)FLASH_TIMEOUT_VALUE);
-  status=HAL_OK;
+  //status =HAL_OK;
   if(status == HAL_OK)
   {
     /*Initialization of SectorError variable*/
