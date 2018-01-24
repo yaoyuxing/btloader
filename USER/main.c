@@ -50,11 +50,12 @@ int main(void)
 	Cache_Enable();                 //打开L1-Cache
 	HAL_Init();                     //初始化HAL库   
 	Stm32_Clock_Init(432,25,2,9);   //设置时钟,216Mhz 
-	delay_init(216);                //延时初始化
+	//delay_init(216);                //延时初始化
 	BSP_NOR_Init(); 
 	InterFlash_SetBankMode(SINGLE_BANK_MODE); //设置为single bank mode  	
 	SystemInfoInit_BtLoader();
-	RefreshSysInfo();  
+	RefreshSysInfo(); 
+	gstUpdate.unCurrentAppADDR=0x123124;
 	while(1)
 	{
 		memcpy((void *)gstUpdate.stFireInfo.FireVersion,"1.0.0",5);

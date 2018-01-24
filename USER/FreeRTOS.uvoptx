@@ -160,121 +160,41 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>57</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134231784</Address>
+          <LineNumber>227</LineNumber>
+          <EnabledFlag>0</EnabledFlag>
+          <Address>134222066</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\main.c</Filename>
+          <Filename>..\HALLIB\STM32F7xx_HAL_Driver\Src\stm32f7xx_hal_flash_ex.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\LED\main.c\57</Expression>
+          <Expression>\\LED\../HALLIB/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_flash_ex.c\227</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>55</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134231778</Address>
+          <LineNumber>185</LineNumber>
+          <EnabledFlag>0</EnabledFlag>
+          <Address>134222804</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\main.c</Filename>
+          <Filename>..\HALLIB\STM32F7xx_HAL_Driver\Src\stm32f7xx_hal_flash.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\LED\main.c\55</Expression>
+          <Expression>\\LED\../HALLIB/STM32F7xx_HAL_Driver/Src/stm32f7xx_hal_flash.c\185</Expression>
         </Bp>
         <Bp>
           <Number>2</Number>
           <Type>0</Type>
-          <LineNumber>69</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134231860</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\main.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\LED\main.c\69</Expression>
-        </Bp>
-        <Bp>
-          <Number>3</Number>
-          <Type>0</Type>
-          <LineNumber>70</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134231864</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\main.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\LED\main.c\70</Expression>
-        </Bp>
-        <Bp>
-          <Number>4</Number>
-          <Type>0</Type>
-          <LineNumber>67</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134231842</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\main.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\LED\main.c\67</Expression>
-        </Bp>
-        <Bp>
-          <Number>5</Number>
-          <Type>0</Type>
-          <LineNumber>66</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134231838</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\main.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\LED\main.c\66</Expression>
-        </Bp>
-        <Bp>
-          <Number>6</Number>
-          <Type>0</Type>
-          <LineNumber>64</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134231820</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\main.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\LED\main.c\64</Expression>
-        </Bp>
-        <Bp>
-          <Number>7</Number>
-          <Type>0</Type>
           <LineNumber>63</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134231816</Address>
+          <Address>134231970</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -286,26 +206,42 @@
           <Expression>\\LED\main.c\63</Expression>
         </Bp>
         <Bp>
-          <Number>8</Number>
+          <Number>3</Number>
           <Type>0</Type>
-          <LineNumber>42</LineNumber>
+          <LineNumber>66</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>0</Address>
+          <Address>134231992</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>..\BleTooth\ble_tooth.c</Filename>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>.\main.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression></Expression>
+          <Expression>\\LED\main.c\66</Expression>
         </Bp>
         <Bp>
-          <Number>9</Number>
+          <Number>4</Number>
           <Type>0</Type>
-          <LineNumber>56</LineNumber>
+          <LineNumber>69</LineNumber>
           <EnabledFlag>1</EnabledFlag>
+          <Address>134232014</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>.\main.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\LED\main.c\69</Expression>
+        </Bp>
+        <Bp>
+          <Number>5</Number>
+          <Type>0</Type>
+          <LineNumber>70</LineNumber>
+          <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
@@ -318,10 +254,10 @@
           <Expression></Expression>
         </Bp>
         <Bp>
-          <Number>10</Number>
+          <Number>6</Number>
           <Type>0</Type>
           <LineNumber>71</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
+          <EnabledFlag>0</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
@@ -506,7 +442,7 @@
 
   <Group>
     <GroupName>CORE</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>

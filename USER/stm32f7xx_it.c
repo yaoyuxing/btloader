@@ -89,7 +89,10 @@ void UART5_IRQHandler(void)
 	UART5_RX_GOT_BYTE_FLAG=SET;
 	//taskEXIT_CRITICAL_FROM_ISR(uxSavedInterStatus);
 } 
-
+void FLASH_IRQHandler(void)
+{
+	HAL_FLASH_IRQHandler();
+}
 
 
 
