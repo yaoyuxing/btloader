@@ -4,7 +4,7 @@
 #include "stm32f7xx_hal.h"
 #include "system_info.h"
 #include "stdlib.h"
-
+#include "crc16.h"
 
 /*  使用说明
     1、RefreshSysInfo();更新系统信息到ram结构体
@@ -25,17 +25,18 @@
 								RefreshSysInfo(); 
 */
 
- stSystemInformationType gstSystemInfo ={ .unPosMask=0x12340000 } ; //系统信息结构体
+ static stSystemInformationType gstSystemInfo ={ .unPosMask=0 } ; //系统信息结构体
  
-#define  SYS_INFO_SECTOR_CNT_MAX          5// gstSystemInfo.unBlockDevideCntAmount             //128k分的sector数量
+#define  SYS_INFO_SECTOR_CNT_MAX           gstSystemInfo.unBlockDevideCntAmount             //128k分的sector数量
 #define  SYS_INFO_SECTOR_SIZE 	           gstSystemInfo.unInfoSingleSize                   //每个sector大小
 #define  APP_SYS_INFO_SIZE 	               gstSystemInfo.unAppSysInfoSize                    //APP部分数据长度
-#define  BOOT_SYS_INFO_SIZE                 BOOT_LOADER_SYS_INFO_SIZE                // (gstSystemInfo.unBtLoaderSysInfoSize) //10// BOOT_LOADER_SYS_INFO_SIZE 
+#define  BOOT_SYS_INFO_SIZE                gstSystemInfo.unBtLoaderSysInfoSize // BOOT_LOADER_SYS_INFO_SIZE            
 #define  SYS_INFO_CTRL_STRUCT_SIZE         (sizeof(stSystemInformationType))         //控制结构体大小
 #define  UNSIGNED_INT_VAL_MAX              (0xffffffff)//(-1)                        //加1为0
 #define  NOT_FIRST_TIMES_FLAG_VAL          (0x123456)
-#define  APP_SYS_INFO_DEFAULT_SIZE         (4)
- 
+#define  APP_SYS_INFO_DEFAULT_SIZE         (1024)
+#define  SYS_DATA_PINTER_SIZE              (sizeof(gstSystemInfo.pucAppSysInfo)+sizeof(gstSystemInfo.pucBtLoaderSysInfo))            //pucAppSysInfo ，pucBtLoaderSysInfo
+
 
 #define  pstSysInfoBase  ( ( stSystemInformationType * ) SYSTEM_INIT_INFO_ADDR)  //系统信息存储地址转换为结构指针
  
@@ -129,7 +130,9 @@ static void SaveSysInfoBackup(void)                            //擦拭保存备份
 	pBackUpData=NULL;
 	gstSystemInfo.unPos=1;                     //标记当前结构数据位置为1
 	gstSystemInfo.unSysBackUpADDR=SYSTEM_INIT_INFO_ADDR;           //备份地址设置为位置0地址
-
+	//当前数据加校验
+	gstSystemInfo.usBtloaderCrc16=usCrc16((unsigned char *)gstSystemInfo.pucBtLoaderSysInfo,BOOT_SYS_INFO_SIZE);//计算升级部分校验
+	gstSystemInfo.usAppCrc16=usCrc16((unsigned char *)gstSystemInfo.pucAppSysInfo,APP_SYS_INFO_SIZE);//计算App部分校验
 	//写当前数据
 	for(cnt=0,pData=(void*)&gstSystemInfo;cnt<SYS_INFO_CTRL_STRUCT_SIZE ;cnt++) //写入控制结构体数据
 	{
@@ -160,8 +163,8 @@ void SaveSysInfo(void)
 	unsigned int  unAddr=0;       //存储地址
 	unsigned int  *punPos=&gstSystemInfo.unPos;     //flash上位置
 	//unsigned int  punMask=gstSystemInfo.unPosMask; //位置掩码
-	unsigned int  cnt=0;
-	
+	unsigned int  cnt=0; 
+
 	if(((punPos[0])>=SYS_INFO_SECTOR_CNT_MAX-1) &&(punPos[0]!=UNSIGNED_INT_VAL_MAX))       //判断是否是否存满
 	{ 
 		SaveSysInfoBackup();                          //存满重新擦拭写入最后两块数据
@@ -173,6 +176,10 @@ void SaveSysInfo(void)
 		gstSystemInfo.unSysBackUpADDR=(punPos[0]-1)*SYS_INFO_SECTOR_SIZE+SYSTEM_INIT_INFO_ADDR;//设置备份地址
 		if(gstSystemInfo.unSysBackUpADDR<SYSTEM_INIT_INFO_ADDR)                            
 			gstSystemInfo.unSysBackUpADDR=SYSTEM_INIT_INFO_ADDR;
+		//CRC校验
+		gstSystemInfo.usBtloaderCrc16=usCrc16((unsigned char *)gstSystemInfo.pucBtLoaderSysInfo,BOOT_SYS_INFO_SIZE);//计算升级部分校验
+		gstSystemInfo.usAppCrc16=usCrc16((unsigned char *)gstSystemInfo.pucAppSysInfo,APP_SYS_INFO_SIZE);//计算App部分校验
+		
 		HAL_FLASH_Unlock();                                //解锁可写 
 		for(cnt=0,pData=(void*)&gstSystemInfo;cnt<SYS_INFO_CTRL_STRUCT_SIZE ;cnt++)//写入当前数据 
 		{
@@ -197,14 +204,15 @@ void SaveSysInfo(void)
 }
 /**
   * @brief  更新系统信息到RAM，在初始化后使用
+  *	@retval 返回值 0：数据及校验正确，1：校验失败
   */
-void RefreshSysInfo(void)
+int RefreshSysInfo(void)
 { 
 	unsigned char *pSource=NULL;    //源数据指针
 	unsigned char *pData=NULL;       //RAM数据指针 
 	unsigned int  unAddr=0;         //地址
 	unsigned int  unPos=0;          //flash位置标记
-	unsigned int  punMask=gstSystemInfo.unPosMask;
+	unsigned int  usCRC2,usCRC3;
 	unsigned int  cnt=0;
 	unAddr=SYSTEM_INIT_INFO_ADDR;                       
 	for(cnt=0;cnt<SYS_INFO_SECTOR_CNT_MAX+1;)       //根据 unPos判断flash最新数据位置
@@ -240,7 +248,20 @@ void RefreshSysInfo(void)
 	for(cnt=0,pData=gstSystemInfo.pucAppSysInfo;cnt<APP_SYS_INFO_SIZE;cnt++) //读取APP系统数据
 	{
 		*pData ++= *pSource++;  
-	}  
+	} 
+	usCRC2=usCrc16((unsigned char *)gstSystemInfo.pucBtLoaderSysInfo,BOOT_SYS_INFO_SIZE);//计算升级部分校验
+	usCRC3=usCrc16((unsigned char *)gstSystemInfo.pucAppSysInfo,APP_SYS_INFO_SIZE);//计算App部分校验
+	if(BOOT_SYS_INFO_SIZE)
+	{
+		if(gstSystemInfo.usBtloaderCrc16!=usCRC2)
+			return 1;//while(1);
+	}
+	if(APP_SYS_INFO_SIZE)
+	{
+		if(gstSystemInfo.usAppCrc16!=usCRC3)
+			return 1;//while(1);
+	} 
+	return 0;
 }  
 /**
   * @brief   更新数据存储的ram地址指针并保存 
@@ -250,8 +271,7 @@ static void RefreshCurrentRam(void)
     unsigned char *pSource=NULL;    //源数据指针
 	unsigned char *pData=NULL;       //RAM数据指针 
 	unsigned int  unAddr=0;         //地址
-	unsigned int  unPos=0;          //flash位置标记
-	unsigned int  punMask=gstSystemInfo.unPosMask;
+	unsigned int  unPos=0;          //flash位置标记 
 	unsigned int  cnt=0;
 	unAddr=SYSTEM_INIT_INFO_ADDR;                       
 	for(cnt=0;cnt<SYS_INFO_SECTOR_CNT_MAX+1;)       //根据 unPos判断flash最新数据位置
@@ -276,11 +296,11 @@ static void RefreshCurrentRam(void)
 		unAddr-=SYS_INFO_SECTOR_SIZE;                           //减一指向最新存储位置
 	}		
 	pSource=(  unsigned char  *)unAddr;             //获取flash地址指针
-	for(cnt=0,pData=(void*)&gstSystemInfo;cnt<SYS_INFO_CTRL_STRUCT_SIZE;cnt++) //读取控制结构体数据
+	for(cnt=0,pData=(void*)&gstSystemInfo;cnt<SYS_INFO_CTRL_STRUCT_SIZE-SYS_DATA_PINTER_SIZE;cnt++) //读取控制结构体数据
 	{
-		//*pData ++=
-		pSource++;  
+		*pData ++=*pSource++;  
 	} 
+	pSource+=SYS_DATA_PINTER_SIZE;
 	for(cnt=0,pData=gstSystemInfo.pucBtLoaderSysInfo;cnt<BOOT_SYS_INFO_SIZE ;cnt++)//读取bootloader数据
 	{
 		*pData ++= *pSource++;  
@@ -290,6 +310,21 @@ static void RefreshCurrentRam(void)
 		*pData ++= *pSource++;  
 	}
 	SaveSysInfo();    	
+}
+/**
+  * @brief   从位置0 更新gstSystemInfo结构体 
+  */
+static void RefreshSysinfoStruct(void)
+{
+	unsigned char *pSource=NULL;    //源数据指针
+	unsigned char *pData=NULL;       //RAM数据指针 
+	unsigned int  unAddr=0;         //地址
+	unsigned int  cnt=0;
+	pSource=(  unsigned char  *)SYSTEM_INIT_INFO_ADDR;             //获取flash地址指针
+	for(cnt=0,pData=(void*)&gstSystemInfo;cnt<SYS_INFO_CTRL_STRUCT_SIZE;cnt++) //读取控制结构体数据
+	{
+		*pData ++=*pSource++;  
+	}
 }
 /**
   * @brief   bootloader中初始化
@@ -303,7 +338,7 @@ void SystemInfoInit_BtLoader(void)
 	gstSystemInfo.unAppSysInfoSize=0;
 	SYS_INFO_SECTOR_SIZE=(SYS_INFO_CTRL_STRUCT_SIZE+APP_SYS_INFO_SIZE+BOOT_SYS_INFO_SIZE);      //初始化总长度   
 	gstSystemInfo.unBlockDevideCntAmount= (NV_SIZE_MAX /SYS_INFO_SECTOR_SIZE); 
-	RefreshSysInfo();                            //读gstSystemInfo信息
+	RefreshSysinfoStruct();                            //读gstSystemInfo信息
 	if(gstSystemInfo.unPosMask!=NOT_FIRST_TIMES_FLAG_VAL)
 	{ 
 		gstSystemInfo.unPosMask=NOT_FIRST_TIMES_FLAG_VAL; //设置第一次写标志
@@ -354,7 +389,7 @@ void SystemInfoInit_App(void * pAppSysInfo,unsigned int len)               //App
 	gstSystemInfo.unAppSysInfoSize=0; 
 	SYS_INFO_SECTOR_SIZE=(SYS_INFO_CTRL_STRUCT_SIZE+APP_SYS_INFO_SIZE+BOOT_SYS_INFO_SIZE);      //初始化总长度 
 	gstSystemInfo.unBlockDevideCntAmount= (NV_SIZE_MAX /SYS_INFO_SECTOR_SIZE); 	
-	RefreshSysInfo();                            //读gstSystemInfo信息
+	RefreshSysinfoStruct();                            //读gstSystemInfo信息
 	if(gstSystemInfo.unPosMask!=NOT_FIRST_TIMES_FLAG_VAL)
 	{
 		gstSystemInfo.unPosMask=NOT_FIRST_TIMES_FLAG_VAL; //设置第一次写标志
@@ -362,7 +397,7 @@ void SystemInfoInit_App(void * pAppSysInfo,unsigned int len)               //App
 		gstSystemInfo.unBtLoaderSysInfoSize=BOOT_LOADER_SYS_INFO_SIZE;  //bt固定长度
 		gstSystemInfo.pucBtLoaderSysInfo=(unsigned char *)&gstUpdate;   //取升级结构ram地址
 		//app sys info
-		APP_SYS_INFO_SIZE=len;    //APP默认开1K 
+		APP_SYS_INFO_SIZE=len;     
 		gstSystemInfo.pucAppSysInfo=pAppSysInfo;
 		//size 
 		SYS_INFO_SECTOR_SIZE=(SYS_INFO_CTRL_STRUCT_SIZE+APP_SYS_INFO_SIZE+BOOT_SYS_INFO_SIZE);      //初始化总长度   
@@ -379,13 +414,15 @@ void SystemInfoInit_App(void * pAppSysInfo,unsigned int len)               //App
 		gstSystemInfo.pucBtLoaderSysInfo=(unsigned char *)&gstUpdate;      //取升级结构ram地址 
 		
 		gstSystemInfo.pucAppSysInfo=pAppSysInfo;                           //取APP数据指针
-		gstSystemInfo.unAppSysInfoSize=len;   
+		//gstSystemInfo.unAppSysInfoSize=len;   
 		
 		
 		SYS_INFO_SECTOR_SIZE=(SYS_INFO_CTRL_STRUCT_SIZE+APP_SYS_INFO_SIZE+BOOT_SYS_INFO_SIZE);      //初始化总长度   
 		gstSystemInfo.unBlockDevideCntAmount= (NV_SIZE_MAX /SYS_INFO_SECTOR_SIZE);  
 		
 		RefreshCurrentRam();  //复位后第一次初始化（将ram上的数据指针保存下来）
+		
+		gstSystemInfo.unAppSysInfoSize=len;   
 		
 		gstSystemInfo.unPos=UNSIGNED_INT_VAL_MAX;	        //存两次做一次备份
 		EraseSysInfoBlock();
@@ -401,8 +438,7 @@ void SystemInfoInit_App(void * pAppSysInfo,unsigned int len)               //App
 		gstSystemInfo.unAppSysInfoSize=len;    
 		
 		SYS_INFO_SECTOR_SIZE=(SYS_INFO_CTRL_STRUCT_SIZE+APP_SYS_INFO_SIZE+BOOT_SYS_INFO_SIZE);      //初始化总长度   
-		gstSystemInfo.unBlockDevideCntAmount= (NV_SIZE_MAX /SYS_INFO_SECTOR_SIZE); 
-		
+		gstSystemInfo.unBlockDevideCntAmount= (NV_SIZE_MAX /SYS_INFO_SECTOR_SIZE);  
 		RefreshCurrentRam(); //复位后第一次初始化（将ram上的数据指针保存下来）
 	}
 }

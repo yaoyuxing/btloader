@@ -38,8 +38,7 @@ void start_task(void *param)
 	
 	
 	vTaskDelete(StartTask_Handler); //删除开始任务
-}
-unsigned char buf[1024]="abcd123456";
+} 
 int main(void)
 {  
 	
@@ -48,45 +47,17 @@ int main(void)
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);                 //中断分组4 0~15抢占方式
 	MPU_ConfigNOR();
 	Cache_Enable();                 //打开L1-Cache
-	HAL_Init();                     //初始化HAL库   
+	HAL_Init();                     //初始化HAL库    
 	Stm32_Clock_Init(432,25,2,9);   //设置时钟,216Mhz 
 	//delay_init(216);                //延时初始化
 	BSP_NOR_Init(); 
 	InterFlash_SetBankMode(SINGLE_BANK_MODE); //设置为single bank mode  	
-	SystemInfoInit_BtLoader();
-	RefreshSysInfo(); 
+	InterFlash_EraseSector(SYSTEM_INIT_INFO_ADDR,NV_SIZE_MAX);         
+	//SystemInfoInit_BtLoader();
+	//RefreshSysInfo(); 
 	gstUpdate.unCurrentAppADDR=0x123124;
-	while(1)
-	{
-		memcpy((void *)gstUpdate.stFireInfo.FireVersion,"1.0.0",5);
-		SaveSysInfo();
-		RefreshSysInfo(); 
-		memcpy((void *)gstUpdate.stFireInfo.FireVersion,"1.0.1",5);
-		SaveSysInfo();
-		RefreshSysInfo();
-		memcpy((void *)gstUpdate.stFireInfo.FireVersion,"1.0.2",5);
-		SaveSysInfo();
-		RefreshSysInfo();
-		//RefreshSysInfoBackup();	
-	}
 	
-	
-	
-//	 delay_ms(1000);
-//	memcpy(gstUpdate.stFireInfo.FireVersion,"abcde",5);
-//	SaveSysInfo();
-//	RefreshSysInfo();
-////SetBtLoaderSystemInfoSize(sizeof(gstUpdate)); 
-//	
-//	memcpy(gstUpdate.stFireInfo.FireVersion,"123456",5);
-//	SaveSysInfo();
-//	
-//	RefreshSysInfo();
-//	while(1)
-//	{
-//	SaveSysInfo();
-//	RefreshSysInfo();
-//	}
+	SystemInfoInit_BtLoader();
 	CheckUpdateStatus();	 
 	
     //创建开始任务

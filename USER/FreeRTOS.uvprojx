@@ -336,7 +336,7 @@
               <MiscControls>--c99</MiscControls>
               <Define>STM32F769xx,USE_HAL_DRIVER,ARM_MATH_CM7,__CC_ARM,ARM_MATH_MATRIX_CHECK,ARM_MATH_ROUNDING</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\OBJ;..\USER;..\HALLIB\STM32F7xx_HAL_Driver\Inc;..\SYSTEM\delay;..\SYSTEM\sys;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM7\r0p1;..\NorFlash;..\FATFS\source;..\InterFlash;..\F769_USART;..\Ymodem;..\Update;..\BleTooth</IncludePath>
+              <IncludePath>..\CORE;..\OBJ;..\USER;..\HALLIB\STM32F7xx_HAL_Driver\Inc;..\SYSTEM\delay;..\SYSTEM\sys;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM7\r0p1;..\NorFlash;..\FATFS\source;..\InterFlash;..\F769_USART;..\Ymodem;..\Update;..\BleTooth;..\CRC</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -481,21 +481,6 @@
               <FilePath>..\HALLIB\STM32F7xx_HAL_Driver\Src\stm32f7xx_hal_usart.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f7xx_hal_dma.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\HALLIB\STM32F7xx_HAL_Driver\Src\stm32f7xx_hal_dma.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f7xx_hal_dma_ex.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\HALLIB\STM32F7xx_HAL_Driver\Src\stm32f7xx_hal_dma_ex.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f7xx_hal_dma2d.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\HALLIB\STM32F7xx_HAL_Driver\Src\stm32f7xx_hal_dma2d.c</FilePath>
-            </File>
-            <File>
               <FileName>stm32f7xx_hal_ltdc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HALLIB\STM32F7xx_HAL_Driver\Src\stm32f7xx_hal_ltdc.c</FilePath>
@@ -534,6 +519,21 @@
               <FileName>stm32f7xx_hal_flash.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HALLIB\STM32F7xx_HAL_Driver\Src\stm32f7xx_hal_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f7xx_ll_dma2d.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HALLIB\STM32F7xx_HAL_Driver\Src\stm32f7xx_ll_dma2d.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f7xx_hal_dma_ex.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HALLIB\STM32F7xx_HAL_Driver\Src\stm32f7xx_hal_dma_ex.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f7xx_hal_dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HALLIB\STM32F7xx_HAL_Driver\Src\stm32f7xx_hal_dma.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -738,7 +738,19 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>BleTooth</GroupName>
+          <GroupName>CRC16</GroupName>
+          <Files>
+            <File>
+              <FileName>crc16.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CRC\crc16.c</FilePath>
+            </File>
+            <File>
+              <FileName>crc16.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\CRC\crc16.h</FilePath>
+            </File>
+          </Files>
         </Group>
       </Groups>
     </Target>

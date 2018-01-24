@@ -24,13 +24,8 @@ void CheckUpdateStatus(void)
 		//  RunAPP(gstUpdate.unCurrentAppADDR);
 			break;
 		case  USR1_START_UPDATE:
-			 RefreshSysInfoBackup();
-//			 gstUpdate.unCurrentAppADDR=(gstUpdate.unCurrentAppADDR==USER1_APP_ADDR)?USER2_APP_ADDR:USER1_APP_ADDR;
-//		   
-//		   gstUpdate.eAppUpdateStatus=NO_UPDATE;
-//		   
-//		   SaveSysInfo();
-		   UpadateError();
+			RefreshSysInfoBackup(); 
+			UpadateError();
 			break;
 		case  USR2_START_UPDATE:
 			 RefreshSysInfoBackup();

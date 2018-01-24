@@ -11,8 +11,8 @@
 
 #if     BLUE_DEBUG        
 #define  BlePrintf         DBG_Printf
-#else   
-#define  BlePrintf         print_null
+#else   	
+#define  BlePrintf(...) 
 #endif
 
 /*蓝牙DIO_6引脚控制的相关配置  M_BL_MRDY*/

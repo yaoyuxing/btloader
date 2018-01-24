@@ -45,7 +45,7 @@ void CreateBleTask(void)
 }
 static void BleTask(void* param)
 {  
-	unsigned int TimeOut=0xe000000;  
+	//unsigned int TimeOut=0xe000000;  
 	BleUartInit(19200);                    //串口波特率设置为上次存入的波特率 
 	BleToothSendCmd(BL_MAC,BLE_CMD_READ,"");
 	#if 0
@@ -162,8 +162,7 @@ static void BleInit(void)
   * @param  Baud: 设置串口波特率  
   */
 static void BleUartInit(unsigned int Baud )
-{ 
-	
+{  
 	gBleUartHandle.Instance= UART5;
 	gBleUartHandle.Init.BaudRate=Baud;
 	gBleUartHandle.Init.WordLength=UART_WORDLENGTH_8B;   //字长为8位数据格式
@@ -303,7 +302,8 @@ static eBleErrorType BleBaudSet(unsigned int Baud)
 			BlePrintf("ble set baud :err=%d\r\n",res);
 			return res;
 		}	
-	}		
+	}	
+	return	BLE_NO_ERR;
 } 
 
 static void BleAnalysisFireInfo(unsigned char *pData)
@@ -333,8 +333,7 @@ static void BleAnalysisFireInfo(unsigned char *pData)
 }
 #define TEMP_BUF_MAX   1024
 static void BleGetFireInfo(void)
-{
-	unsigned short len =0;
+{ 
 	char * pdata=malloc(TEMP_BUF_MAX),*pSendStr=malloc(TEMP_BUF_MAX);
 	if(pdata==NULL)     while(1);
 	if(pSendStr==NULL)  while(1);

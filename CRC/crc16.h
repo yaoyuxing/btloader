@@ -1,4 +1,4 @@
-#ifdef  CRC_16_H
+#ifndef  CRC_16_H
 #define CRC_16_H
 
 

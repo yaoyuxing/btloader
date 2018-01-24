@@ -1,5 +1,5 @@
 
-
+#include "crc16.h"
 
 
 /* 高位字节的CRC 值 */
@@ -46,7 +46,7 @@ static unsigned char sucCRCLo[] =
 
 //unsigned short usDataLen ; /* 报文中的字节数 */
 
-unsigned short usCrc16 (unsigned char *pucMsg,unsigned short usDataLen )
+unsigned short usCrc16 (unsigned char *pucMsg,unsigned short usDataLen)
 {
 
 	unsigned char ucCRCHi = 0xFF ; /* CRC 的高字节初始化 */
