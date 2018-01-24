@@ -1,4 +1,4 @@
-#include "stdio.h"
+
 
 
 
@@ -46,7 +46,7 @@ static unsigned char sucCRCLo[] =
 
 //unsigned short usDataLen ; /* 报文中的字节数 */
 
-unsigned short CRC16 (unsigned char *pucMsg,unsigned short usDataLen )
+unsigned short usCrc16 (unsigned char *pucMsg,unsigned short usDataLen )
 {
 
 	unsigned char ucCRCHi = 0xFF ; /* CRC 的高字节初始化 */
@@ -59,14 +59,7 @@ unsigned short CRC16 (unsigned char *pucMsg,unsigned short usDataLen )
 		ucCRCHi = sucCRCLo[uIndex] ;
 	}	
 	return (ucCRCHi << 8 | ucCRCLo);
-}
-void main()
-{
-	char data[]={0x01,0x03,0x00,0x0,0,0x0a};
-	int  crc;
-	crc=CRC16(data,sizeof(data));
-	printf("%x\n",crc);
-}
+} 
 
 
 
