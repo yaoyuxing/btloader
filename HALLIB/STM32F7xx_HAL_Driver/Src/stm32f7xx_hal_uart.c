@@ -2,8 +2,6 @@
   ******************************************************************************
   * @file    stm32f7xx_hal_uart.c
   * @author  MCD Application Team
-  * @version V1.1.1
-  * @date    01-July-2016
   * @brief   UART HAL module driver.
   *          This file provides firmware functions to manage the following
   *          functionalities of the Universal Asynchronous Receiver Transmitter (UART) peripheral:
@@ -126,7 +124,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2016 STMicroelectronics</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -155,7 +153,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f7xx_hal.h"
-#include "uart.h"
+
 /** @addtogroup STM32F7xx_HAL_Driver
   * @{
   */
@@ -922,14 +920,11 @@ HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData,
     /* Process Unlocked */
     __HAL_UNLOCK(huart);
 
-    /* Enable the UART Parity Error Interrupt */
-    SET_BIT(huart->Instance->CR1, USART_CR1_PEIE);
-
     /* Enable the UART Error Interrupt: (Frame error, noise error, overrun error) */
     SET_BIT(huart->Instance->CR3, USART_CR3_EIE);
 
-    /* Enable the UART Data Register not empty Interrupt */
-    SET_BIT(huart->Instance->CR1, USART_CR1_RXNEIE);
+    /* Enable the UART Parity Error and Data Register not empty Interrupts */
+    SET_BIT(huart->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE);
 
     return HAL_OK;
   }
@@ -1206,14 +1201,15 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
     /* UART in mode Receiver ---------------------------------------------------*/
     if(((isrflags & USART_ISR_RXNE) != RESET) && ((cr1its & USART_CR1_RXNEIE) != RESET))
     {
-		
       UART_Receive_IT(huart);
       return;
     }
   }
 
   /* If some errors occur */
-  if((errorflags != RESET) && ((cr3its & (USART_CR3_EIE | USART_CR1_PEIE)) != RESET))
+  if(   (errorflags != RESET)
+     && (   ((cr3its & USART_CR3_EIE) != RESET)
+         || ((cr1its & (USART_CR1_RXNEIE | USART_CR1_PEIE)) != RESET)) )
   {
 
     /* UART parity error interrupt occurred -------------------------------------*/
@@ -1652,7 +1648,8 @@ static HAL_StatusTypeDef UART_Receive_IT(UART_HandleTypeDef *huart)
     else
     {
       *huart->pRxBuffPtr++ = (uint8_t)(huart->Instance->RDR & (uint8_t)uhMask);
-    } 
+    }
+
     if(--huart->RxXferCount == 0)
     {
       /* Disable the UART Parity Error Interrupt and RXNE interrupt*/
@@ -1662,7 +1659,8 @@ static HAL_StatusTypeDef UART_Receive_IT(UART_HandleTypeDef *huart)
       CLEAR_BIT(huart->Instance->CR3, USART_CR3_EIE);
 
       /* Rx process is completed, restore huart->RxState to Ready */
-      huart->RxState = HAL_UART_STATE_READY; 
+      huart->RxState = HAL_UART_STATE_READY;
+
       HAL_UART_RxCpltCallback(huart);
 
       return HAL_OK;
@@ -2025,16 +2023,6 @@ HAL_StatusTypeDef UART_CheckIdleState(UART_HandleTypeDef *huart)
   {
     /* Wait until TEACK flag is set */
     if(UART_WaitOnFlagUntilTimeout(huart, USART_ISR_TEACK, RESET, tickstart, HAL_UART_TIMEOUT_VALUE) != HAL_OK)
-    {
-      /* Timeout Occurred */
-      return HAL_TIMEOUT;
-    }
-  }
-  /* Check if the Receiver is enabled */
-  if((huart->Instance->CR1 & USART_CR1_RE) == USART_CR1_RE)
-  {
-    /* Wait until REACK flag is set */
-    if(UART_WaitOnFlagUntilTimeout(huart, USART_FLAG_REACK, RESET, tickstart, HAL_UART_TIMEOUT_VALUE) != HAL_OK)
     {
       /* Timeout Occurred */
       return HAL_TIMEOUT;

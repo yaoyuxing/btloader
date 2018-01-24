@@ -2,8 +2,6 @@
   ******************************************************************************
   * @file    stm32f7xx_hal_nor.c
   * @author  MCD Application Team
-  * @version V1.1.1
-  * @date    01-July-2016
   * @brief   NOR HAL module driver.
   *          This file provides a generic firmware to drive NOR memories mounted 
   *          as external device.
@@ -55,7 +53,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2016 STMicroelectronics</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -616,7 +614,7 @@ HAL_StatusTypeDef HAL_NOR_ProgramBuffer(NOR_HandleTypeDef *hnor, uint32_t uwAddr
 {
   uint16_t * p_currentaddress = (uint16_t *)NULL;
   uint16_t * p_endaddress = (uint16_t *)NULL;
-  uint32_t lastloadedaddress , deviceaddress ;
+  uint32_t lastloadedaddress = 0, deviceaddress = 0;
   
   /* Process Locked */
   __HAL_LOCK(hnor);
@@ -672,7 +670,7 @@ HAL_StatusTypeDef HAL_NOR_ProgramBuffer(NOR_HandleTypeDef *hnor, uint32_t uwAddr
     p_currentaddress ++; 
   }
 
-  // NOR_WRITE((uint32_t)(lastloadedaddress), NOR_CMD_DATA_BUFFER_AND_PROG_CONFIRM);
+  NOR_WRITE((uint32_t)(lastloadedaddress), NOR_CMD_DATA_BUFFER_AND_PROG_CONFIRM);
   
   /* Check the NOR controller state */
   hnor->State = HAL_NOR_STATE_READY;
