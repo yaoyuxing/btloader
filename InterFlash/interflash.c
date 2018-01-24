@@ -67,8 +67,8 @@ static unsigned int  GetSectorAddr(unsigned int useraddr)
   * @brief  检验擦拭是否正确函数
   * @note   擦看是否对应地址数据为0xff
   * @param  addr: 擦拭地址
-  * @param  len: 擦拭地址
-  * @retval 擦拭setor编号 single mode 0~11 dual mode 0~23
+  * @param  len: 擦拭长度
+  * @retval 返回0 ：正确 ，1：错误
   */
 static int  CheckErase(unsigned int addr ,unsigned int len)
 {
@@ -79,12 +79,21 @@ static int  CheckErase(unsigned int addr ,unsigned int len)
 	}
 	return 0;
 }
-static int  CheckErase(unsigned int addr ,unsigned int len)
+/**
+  * @brief  检验写入是否正确函数
+  * @note   擦看是否对应地址数据为写buf数据
+  * @param  buf: 写入buf地址
+  * @param  len: 写入长度
+  * @param  addr: 写入地址
+  * @retval 返回0 ：正确 ，1：错误
+  */
+static int  CheckProgram(unsigned char *buf ,unsigned int len,unsigned int addr)
 {
-	unsigned int cnt =len;
-	while(cnt--)
+	unsigned int cnt =0;
+	unsigned char *pData=(uint8_t*)addr;
+	while(len--)
 	{ 
-		if((*(uint8_t *)addr++)!=0xff) return 1;
+		if(buf[cnt++]!=*pData++) return 1;
 	}
 	return 0;
 }
@@ -142,7 +151,7 @@ int InterFlash_EraseSector(unsigned int  Addr,unsigned int offset)
                       FLASH_TYPEPROGRAM_WORD，FLASH_TYPEPROGRAM_DOUBLEWORD
   * @retval HAL_StatusTypeDef HAL Status
   */
-int InterFlash_Program(unsigned int Addr,void* pBuf,unsigned int DataCnt_Byte,unsigned int  DataType)
+int InterFlash_Program(unsigned int useraddr,void* pBuf,unsigned int DataCnt_Byte,unsigned int  DataType)
 {
 	unsigned char      *p8Data=(unsigned char *)pBuf;
 	unsigned short     *p16Data=(unsigned short *)pBuf;
@@ -151,6 +160,7 @@ int InterFlash_Program(unsigned int Addr,void* pBuf,unsigned int DataCnt_Byte,un
 	int  Status;                                              
 	unsigned char DataTypeSize  ;                           //数据类型尺寸 Byte=1,short=2
 	unsigned int  DataMax,cnt=0  ;
+	unsigned int  Addr=useraddr;
 	DataTypeSize =pow(2,DataType);                          //2^DataType 得到尺寸
 	DataMax =DataCnt_Byte/DataTypeSize ;                   //DataMax写入数据次数 
 	InterFlash_EraseSector(Addr,DataCnt_Byte);             //擦拭sector
@@ -161,6 +171,8 @@ int InterFlash_Program(unsigned int Addr,void* pBuf,unsigned int DataCnt_Byte,un
 		{ 
 			case FLASH_TYPEPROGRAM_BYTE:
 				 Status=HAL_FLASH_Program(DataType,Addr,p8Data[cnt]);   //写入byte
+				 if(CheckProgram(p8Data,DataMax,useraddr)==1)
+					 while(1);
 				 break;
 			case FLASH_TYPEPROGRAM_HALFWORD:
 				 Status=HAL_FLASH_Program(DataType,Addr,p16Data[cnt]);  //写入halfword
@@ -173,6 +185,7 @@ int InterFlash_Program(unsigned int Addr,void* pBuf,unsigned int DataCnt_Byte,un
 				 break;		 
 		} 
 		Addr+=DataTypeSize;                                     //地址偏移
+		
 	}
 	HAL_FLASH_Lock();
 	return Status;
