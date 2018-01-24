@@ -1,7 +1,0 @@
--c --cpu Cortex-M7.fp.dp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\CORE -I ..\OBJ -I ..\USER -I ..\HALLIB\STM32F7xx_HAL_Driver\Inc -I ..\SYSTEM\delay -I ..\SYSTEM\sys -I ..\HARDWARE\LED -I ..\HARDWARE\LCD -I ..\HARDWARE\KEY -I ..\HARDWARE\SDRAM -I ..\FreeRTOS\include -I ..\DEBUG -I ..\ME3630 -I ..\RTK -I ..\BLUETOOTH -I ..\json -I ..\json\assets -I ..\json\demo -I ..\json\struct2json\inc -I ..\json\struct2json\src -I ..\OLED -I ..\IIC -I ..\24CXX -I ..\SPI -I ..\CRC -I ..\RTCM -I ..\RADIO -I ..\TASK -I ..\MY_SYS -I ..\FreeRTOS\portable\RVDS\ARM_CM7\r0p1 -I ..\W25QXX -I ..\NorFlash -I ..\FATFS\source -I ..\InterFlash -I ..\F769_USART\UART -I ..\Ymode -I ..\Update --c99
--I.\RTE\_BootLoader
--IC:\Keil_v5\ARM\PACK\Keil\STM32F7xx_DFP\2.8.0\Drivers\CMSIS\Device\ST\STM32F7xx\Include
--IC:\Keil_v5\ARM\CMSIS\Include
--IC:\Keil_v5\ARM\PACK\Keil\STM32F7xx_DFP\2.8.0
--D__UVISION_VERSION="524" -D_RTE_ -DSTM32F769xx -DSTM32F769xx -DUSE_HAL_DRIVER -DARM_MATH_CM7 -D__CC_ARM -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING
--o ..\obj\bluetooth.o --omf_browse ..\obj\bluetooth.crf --depend ..\obj\bluetooth.d "..\BLUETOOTH\bluetooth.c"
