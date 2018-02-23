@@ -153,7 +153,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f7xx_hal.h"
-
 /** @addtogroup STM32F7xx_HAL_Driver
   * @{
   */
@@ -1633,8 +1632,8 @@ static HAL_StatusTypeDef UART_EndTransmit_IT(UART_HandleTypeDef *huart)
 static HAL_StatusTypeDef UART_Receive_IT(UART_HandleTypeDef *huart)
 {
   uint16_t* tmp;
-  uint16_t uhMask = huart->Mask;
-
+  uint16_t uhMask = huart->Mask; 
+	
   /* Check that a Rx process is ongoing */
   if(huart->RxState == HAL_UART_STATE_BUSY_RX)
   {
@@ -1647,7 +1646,8 @@ static HAL_StatusTypeDef UART_Receive_IT(UART_HandleTypeDef *huart)
     }
     else
     {
-      *huart->pRxBuffPtr++ = (uint8_t)(huart->Instance->RDR & (uint8_t)uhMask);
+      *huart->pRxBuffPtr++ = (uint8_t)(huart->Instance->RDR & (uint8_t)uhMask); 
+			//ITM_SendChar(*huart->pRxBuffPtr);
     }
 
     if(--huart->RxXferCount == 0)
