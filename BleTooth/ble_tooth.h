@@ -1,18 +1,8 @@
 #ifndef __AT_BLUETOOTH_H__
 #define __AT_BLUETOOTH_H__ 
 
-//命令回显结束符
-/*
-0a------换行符号－－－－－－"\n"
-0d------回车符号－－－－－－"\r"
-0D 0A 
-*/
-//#define BL_SEND_COMMAND_ECHO_1	'\r'
-//#define BL_SEND_COMMAND_ECHO_2	'\n'
-
-////命令符号 equal
-//#define	BL_EQUAL	"="
-//#define	BL_COMMAND_END	"\0"
+ 
+ 
 //模式切换命令
 #define	BL_MODE		"+++"			//模式切换指令
 #define	BL_ADVON	"AT+ADVON"		//打开模块广播功能
@@ -77,7 +67,7 @@ typedef enum ble_err
 	BLE_NACK,
 	BLE_BAUD_ERR,
 	BLE_TRY_ERR,
-	
+	BLE_UPDATE_BSY
 }eBleErrorType;
 typedef enum ble_cmd
 {

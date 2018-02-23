@@ -10,7 +10,7 @@
 #include "stm32f7xx.h"  
 
 
-//#define NOR_FLASH_FS_TEST
+#define NOR_FLASH_FS_TEST 0
 #ifdef NOR_FLASH_FS_TEST  
 void ceate_fs_test(void);
 #endif

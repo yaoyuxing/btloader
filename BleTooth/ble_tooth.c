@@ -8,7 +8,7 @@
 #include "bootloader.h"
 #include "stdlib.h"
 
-
+#define  BlSendCommand          BleSendStr
 static eBleErrorType eCombinCommand(char *CmdHeadStr,eBleSendModeType eMode,char *Param,char *sendstr,eBleCmdType *eCmd,eBleDelayTimeType *eDelayTime);
 static eBleErrorType eAnalyzeBleAck(eBleCmdType eCmd);
 //命令发送应答数据处理函数
@@ -35,7 +35,7 @@ eBleErrorType BleToothSendCmd(char *CmdHeadStr,eBleSendModeType eMode,char *Para
 	res=eCombinCommand(CmdHeadStr,eMode,Param,cmdbuf,&eCmd,&eDelayTime); //分析组合命令 获取延时时间及命令枚举
 	BleCmdNormalRxMode_Enter();	 //串口接收进入蓝牙发送命令模式
 	BleRxBufferClear();      //清空数据
-	BleSendStr(cmdbuf);      //发送命令
+	BlSendCommand(cmdbuf);      //发送命令
 	BleDelay_ms(eDelayTime); //接收数据到延时结束
 	res=eAnalyzeBleAck(eCmd);//处理蓝牙应答数据
 	BleCmdNormalRxMode_Exit();     //串口接收退出蓝牙发送命令模式
@@ -44,7 +44,7 @@ eBleErrorType BleToothSendCmd(char *CmdHeadStr,eBleSendModeType eMode,char *Para
 }
 
 /**
-  * @brief  蓝牙模块强度设置应答处理函数 
+  * @brief  蓝牙模块强度设置应答处理函数 CC78ABA12893
   * @retval 蓝牙错误码
   */
 static eBleErrorType eBL_TXPWR_Analyze(void)

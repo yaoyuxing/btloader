@@ -65,7 +65,7 @@ void USART2_IRQHandler(void)
 	//UBaseType_t uxSavedInterStatus;
 	//taskENTER_CRITICAL_FROM_ISR();
 	HAL_UART_IRQHandler(&gstUart2.UartHandle);  
-    HAL_UART_Receive_IT(&gstUart2.UartHandle,(uint8_t *)&gstUart2.ucRecByte,1); 
+  HAL_UART_Receive_IT(&gstUart2.UartHandle,(uint8_t *)&gstUart2.ucRecByte,1); 
 	UART2_RX_GOT_BYTE_FLAG=SET;
 	//taskEXIT_CRITICAL_FROM_ISR(uxSavedInterStatus);
 }
@@ -84,10 +84,17 @@ void UART5_IRQHandler(void)
 {  
 	//UBaseType_t uxSavedInterStatus;
 	//taskENTER_CRITICAL_FROM_ISR();
-	HAL_UART_IRQHandler(&gstUart5.UartHandle);   
-	HAL_UART_Receive_IT(&gstUart5.UartHandle,(uint8_t *)&gstUart5.ucRecByte,1); 
+	gstUart5.ucRecByte=0;
+	HAL_UART_IRQHandler(&gstUart5.UartHandle);  
 	UART5_RX_GOT_BYTE_FLAG=SET;
+	
+	#if 0
+	if(gstUart5.eRxMode!=UART_RX_NORMAL_MODE)
+	HAL_UART_Receive_IT(&gstUart5.UartHandle,(uint8_t *)&gstUart5.ucRecByte,1);  
 	//taskEXIT_CRITICAL_FROM_ISR(uxSavedInterStatus);
+	#else 
+	HAL_UART_Receive_IT(&gstUart5.UartHandle,(uint8_t *)&gstUart5.ucRecByte,1);
+	#endif
 } 
 void FLASH_IRQHandler(void)
 {

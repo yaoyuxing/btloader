@@ -50,14 +50,19 @@
 #define ABORT1                  (0x41)  /* 'A' == 0x41, abort by user */
 #define ABORT2                  (0x61)  /* 'a' == 0x61, abort by user */
 
-#define NAK_TIMEOUT              (0x100000)
-#define MAX_ERRORS              (5)
+#define NAK_TIMEOUT             (0xd000000)
+#define MAX_ERRORS              (4)
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 int32_t Ymodem_Receive (uint8_t *);
 uint8_t Ymodem_Transmit (uint8_t *,const  uint8_t* , uint32_t ); 
 uint16_t Cal_CRC16(const uint8_t* data, uint32_t size);
+extern uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD] ;
+extern int32_t  packet_length ;
+extern unsigned short Datalen ;
+extern	  unsigned char RecStartFlag ;
+int YmodemRecISR(char Data);
 #endif  /* _YMODEM_H_ */
 
 /*******************(C)COPYRIGHT 2010 STMicroelectronics *****END OF FILE****/

@@ -4,10 +4,11 @@
 #include "delay.h"
 #include "stdlib.h"
 #include <stdarg.h>
+#include "ymodem.h"
 
-
-
+//全局串口中断接收结构
 stUART_RxCtrlType  gstRxCtrl;
+//全局串口结构
 #ifdef USE_USART1 
 stUART_BaseType   gstUart1;
 #endif
@@ -120,7 +121,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 			GPIO_InitStruct.Pin=UART5_RX_PIN;
 			GPIO_InitStruct.Alternate=UART5_RX_AF;
 			HAL_GPIO_Init(UART5_RX_PORT,&GPIO_InitStruct);	
-			HAL_NVIC_SetPriority(UART5_IRQn, 6, 0);
+			HAL_NVIC_SetPriority(UART5_IRQn, 0, 0);
 			HAL_NVIC_EnableIRQ(UART5_IRQn);	
 			break;
 		#endif
@@ -129,6 +130,11 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 static int UART_ReceiveCallback(stUART_RxCtrlType *pstRxCtrl)
 {  
 	char Byte=*pstRxCtrl->pReByte;
+	if(gstUart5.eRxMode==UART_RX_NORMAL_MODE)
+	{
+		YmodemRecISR(gstUart5.ucRecByte);
+		return 0;
+	}
 	if(pstRxCtrl->ucUseEscape)
 	{
 		if((Byte==ESCAPE_CHAR)&&(pstRxCtrl->ucEscFlag==RESET))//接到转义字符
@@ -175,17 +181,18 @@ static int UART_ReceiveCallback(stUART_RxCtrlType *pstRxCtrl)
 				(*pstRxCtrl->pBufferLen)+=1;
 				*(pstRxCtrl->pFrameStartFlag)=SET;
 			}
-			else if(((*pstRxCtrl->pFrameStartFlag)==SET)&&(*pstRxCtrl->pBufferLen<(*gstRxCtrl.pRxSetLen)))//接收数据直到超过长度
+			else if(((*pstRxCtrl->pFrameStartFlag)==SET)&&(*pstRxCtrl->pBufferLen<(*gstRxCtrl.pRxSetLen)))		//接收数据直到超过长度
 			{
 				pstRxCtrl->pBuffer[*pstRxCtrl->pBufferLen]=Byte;
 				(*pstRxCtrl->pBufferLen)+=1;
 			}
-			else
+			else					//超过len
 			{
-				*(pstRxCtrl->pRecFrameFlag)=RESET;   
-				pstRxCtrl->pBuffer[*pstRxCtrl->pBufferLen]=Byte;
-				(*pstRxCtrl->pBufferLen)+=1;
-				*(pstRxCtrl->pRecFrameFlag)=SET;   
+			  *(pstRxCtrl->pFrameStartFlag)=RESET;   //清空帧标志
+//			  pstRxCtrl->pBuffer[*pstRxCtrl->pBufferLen]=Byte;//接收最后一个字节
+//			  (*pstRxCtrl->pBufferLen)+=1;
+				*(pstRxCtrl->pRecFrameFlag)=SET;   //帧完成
+				*gstRxCtrl.pRxSetLen=0;//接收完一帧将设置的长度清零
 			}
 		} 
 	}
@@ -208,55 +215,59 @@ static int UART_ReceiveCallback(stUART_RxCtrlType *pstRxCtrl)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)  //串口接收中断回调函数
 {   
 	gstRxCtrl.Uartx=(unsigned int )huart->Instance;
-	switch(gstRxCtrl.Uartx)
-	{ 
-		#ifdef USE_USART1
-		case USART1_BASE :
-			gstRxCtrl.pReByte=&gstUart1.ucRecByte; 
-			gstRxCtrl.pBuffer=gstUart1.Buffer;
-			gstRxCtrl.pBufferLen=&gstUart1.unBufferLen;
-			gstRxCtrl.pRecFrameFlag=(unsigned char*)&UART1_RX_GOT_FRAME_FLAG; 
-			gstRxCtrl.pRecByteFlag=(unsigned char*)&UART1_RX_GOT_BYTE_FLAG;
-			gstRxCtrl.pFrameStartFlag=(unsigned char*)&UART1_RX_FRAME_START_FLAG;
-			gstRxCtrl.pMode=&gstUart1.eRxMode;  
-			gstRxCtrl.cHead=UART1_HEAD_CHAR;
-			gstRxCtrl.cTail=UART1_TAIL_CHAR;
-			gstRxCtrl.ucUseEscape=SET;
-			gstRxCtrl.pRxSetLen=&gstUart1.unRxSetLen;
-			break;
-		#endif 
-		#ifdef USE_USART2
-		case USART2_BASE :
-			gstRxCtrl.pReByte=&gstUart2.ucRecByte; 
-			gstRxCtrl.pBuffer=gstUart2.Buffer;
-			gstRxCtrl.pBufferLen=&gstUart2.unBufferLen;
-			gstRxCtrl.pRecFrameFlag=(unsigned char*)&UART2_RX_GOT_FRAME_FLAG; 
-			gstRxCtrl.pRecByteFlag=(unsigned char*)&UART2_RX_GOT_BYTE_FLAG;
-			gstRxCtrl.pFrameStartFlag=(unsigned char*)&UART2_RX_FRAME_START_FLAG;
-			gstRxCtrl.pMode=&gstUart2.eRxMode;  
-			gstRxCtrl.cHead=UART2_HEAD_CHAR;
-			gstRxCtrl.cTail=UART2_TAIL_CHAR;
-			gstRxCtrl.ucUseEscape=SET;
-			gstRxCtrl.pRxSetLen=&gstUart2.unRxSetLen;
-			break;
-		#endif 
-		#ifdef USE_UART5
-		case UART5_BASE :
-			gstRxCtrl.pReByte=&gstUart5.ucRecByte; 
-			gstRxCtrl.pBuffer=gstUart5.Buffer;
-			gstRxCtrl.pBufferLen=&gstUart5.unBufferLen;
-			gstRxCtrl.pRecFrameFlag=(unsigned char*)&UART5_RX_GOT_FRAME_FLAG; 
-			gstRxCtrl.pRecByteFlag=(unsigned char*)&UART5_RX_GOT_BYTE_FLAG;
-			gstRxCtrl.pFrameStartFlag=(unsigned char*)&UART5_RX_FRAME_START_FLAG;
-			gstRxCtrl.pMode=&gstUart5.eRxMode;  
-			gstRxCtrl.cHead=UART5_HEAD_CHAR;
-			gstRxCtrl.cTail=UART5_TAIL_CHAR;
-			gstRxCtrl.ucUseEscape=SET;
-			gstRxCtrl.pRxSetLen=&gstUart5.unRxSetLen;
-			break;
-		#endif 
-	} 
+	if(UART_RX_NORMAL_MODE!=gstUart5.eRxMode)
+	{
+		switch(gstRxCtrl.Uartx)
+		{ 
+			#ifdef USE_UART5
+			case UART5_BASE :
+				gstRxCtrl.pReByte=&gstUart5.ucRecByte; 
+				gstRxCtrl.pBuffer=gstUart5.Buffer;
+				gstRxCtrl.pBufferLen=&gstUart5.unBufferLen;
+				gstRxCtrl.pRecFrameFlag=(unsigned char*)&UART5_RX_GOT_FRAME_FLAG; 
+				gstRxCtrl.pRecByteFlag=(unsigned char*)&UART5_RX_GOT_BYTE_FLAG;
+				gstRxCtrl.pFrameStartFlag=(unsigned char*)&UART5_RX_FRAME_START_FLAG;
+				gstRxCtrl.pMode=&gstUart5.eRxMode;  
+				gstRxCtrl.cHead=UART5_HEAD_CHAR;
+				gstRxCtrl.cTail=UART5_TAIL_CHAR;
+				gstRxCtrl.ucUseEscape=SET;
+				gstRxCtrl.pRxSetLen=&gstUart5.unRxSetLen;
+				break;
+			#endif 
+			#ifdef USE_USART1
+			case USART1_BASE :
+				gstRxCtrl.pReByte=&gstUart1.ucRecByte; 
+				gstRxCtrl.pBuffer=gstUart1.Buffer;
+				gstRxCtrl.pBufferLen=&gstUart1.unBufferLen;
+				gstRxCtrl.pRecFrameFlag=(unsigned char*)&UART1_RX_GOT_FRAME_FLAG; 
+				gstRxCtrl.pRecByteFlag=(unsigned char*)&UART1_RX_GOT_BYTE_FLAG;
+				gstRxCtrl.pFrameStartFlag=(unsigned char*)&UART1_RX_FRAME_START_FLAG;
+				gstRxCtrl.pMode=&gstUart1.eRxMode;  
+				gstRxCtrl.cHead=UART1_HEAD_CHAR;
+				gstRxCtrl.cTail=UART1_TAIL_CHAR;
+				gstRxCtrl.ucUseEscape=SET;
+				gstRxCtrl.pRxSetLen=&gstUart1.unRxSetLen;
+				break;
+			#endif 
+			#ifdef USE_USART2
+			case USART2_BASE :
+				gstRxCtrl.pReByte=&gstUart2.ucRecByte; 
+				gstRxCtrl.pBuffer=gstUart2.Buffer;
+				gstRxCtrl.pBufferLen=&gstUart2.unBufferLen;
+				gstRxCtrl.pRecFrameFlag=(unsigned char*)&UART2_RX_GOT_FRAME_FLAG; 
+				gstRxCtrl.pRecByteFlag=(unsigned char*)&UART2_RX_GOT_BYTE_FLAG;
+				gstRxCtrl.pFrameStartFlag=(unsigned char*)&UART2_RX_FRAME_START_FLAG;
+				gstRxCtrl.pMode=&gstUart2.eRxMode;  
+				gstRxCtrl.cHead=UART2_HEAD_CHAR;
+				gstRxCtrl.cTail=UART2_TAIL_CHAR;
+				gstRxCtrl.ucUseEscape=SET;
+				gstRxCtrl.pRxSetLen=&gstUart2.unRxSetLen;
+				break;
+			#endif 
+		}
+	 }
 	UART_ReceiveCallback(&gstRxCtrl);
+	
 }
 /**
   * @brief  发送字符串
@@ -268,7 +279,7 @@ void SendString(UART_HandleTypeDef *huart,  char *pStr)
 	unsigned int Uartx=(unsigned int )huart->Instance;
 	while(*pStr!='\0')
 	{
-        switch(Uartx)
+		switch(Uartx)
 		{ 
 			#ifdef USE_USART1
 			case USART1_BASE:  
@@ -330,7 +341,8 @@ void UART1_Printf(const char *fmt,...)
 	va_end(args); 
 	for(i = 0;i < n;i ++)
 	{
-		COM1_SendBytes( (unsigned char *)&buffer[i],1);
+		COM1_SendBytes( (unsigned char *)&buffer[i],1); 
+		ITM_SendChar(buffer[i]);//调试打印
 	}
 } 
 #endif
@@ -360,3 +372,40 @@ void print_null(const char *fmt,...)
 {
 	
 }
+void Uart5SendBytes(char * data,unsigned int len)
+{
+  char *pdata= data;
+	while(len--)
+	{
+		while((UART5->ISR&0X40)==0);//循环发送,直到发送完毕   
+		UART5->TDR = *pdata;  
+		pdata++;
+	}
+}
+////串口调试打印
+
+//#include <stdio.h>
+
+//#define ITM_Port8(n)    (*((volatile unsigned char *)(0xE0000000+4*n)))
+//#define ITM_Port16(n)   (*((volatile unsigned short*)(0xE0000000+4*n)))
+//#define ITM_Port32(n)   (*((volatile unsigned long *)(0xE0000000+4*n)))
+//#define DEMCR           (*((volatile unsigned long *)(0xE000EDFC)))
+//#define TRCENA          0x01000000
+
+//struct __FILE { int handle; /* Add whatever you need here */ };
+//    FILE __stdout;
+//    FILE __stdin;
+//    
+//int fputc(int ch, FILE *f) 
+//{
+//    if (DEMCR & TRCENA) 
+//    {
+//        while (ITM_Port32(0) == 0);
+//        ITM_Port8(0) = ch;
+//    }
+//    return(ch);
+//}
+
+
+
+

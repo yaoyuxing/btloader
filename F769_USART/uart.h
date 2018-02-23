@@ -33,7 +33,7 @@ void usart_test_fun(void);
 
 
 
-#define  UART_RX_BUFFER_SIZE  1024
+#define  UART_RX_BUFFER_SIZE  2048
 typedef enum usart_rx_mode
 {
 	UART_RX_FRAME_MODE=0,
@@ -46,7 +46,7 @@ typedef struct usart_base_type
 	eUART_RxModeType eRxMode;          //接收模式
 	unsigned char    ucRecByte;        //当前接收到的字节
 	unsigned char    Buffer[UART_RX_BUFFER_SIZE];           //缓冲区
-	unsigned int     unBufferLen;       //实际接收长度
+ 	unsigned int     unBufferLen;       //实际接收长度
 	unsigned  int    unRxSetLen;       //设置接收长度 
 volatile    unsigned  char   Flags[UART_FLAG_MAX]; 
 }stUART_BaseType;
@@ -68,13 +68,13 @@ typedef struct uart_rx_ctrl
 }stUART_RxCtrlType;
 
 
+extern stUART_RxCtrlType  gstRxCtrl;
 
 
 
 
 
-
-
+/**************************                    串口 1（主要是用作调试打印）             ******************************/
 #ifdef USE_USART1
 
 #define   USART1_CLK_ENABLE()    __HAL_RCC_USART1_CLK_ENABLE()
@@ -100,7 +100,7 @@ extern  stUART_BaseType   gstUart1;
 #define UART1_SendString(pStr)           SendString(&(gstUart1.UartHandle),pStr)
 void UART1_Printf(const char *fmt,...);
 #endif
-
+/*********************************************************************************************************************/
 
 
 
@@ -130,7 +130,8 @@ extern  stUART_BaseType   gstUart2;
 #define UART2_SendString(pStr)           SendString(&(gstUart2.UartHandle),pStr)
 #endif
 /*********************************************************************************************************************/
- 
+
+ /**************************                        串口 3 4                              ******************************/
 
 #ifdef USE_USART3
 extern  stUART_BaseType   gstUart3;
@@ -172,12 +173,12 @@ extern  stUART_BaseType   gstUart5;
 #define COM5_SendBytes(pdata,size)       do{ HAL_UART_Transmit(&(gstUart5.UartHandle),pdata,size,UART_TX_TIME_OUT);}while(0)
 #define COM5_RecBytes(pdata,size)        do{HAL_UART_Receive_IT(&(gstUart5.UartHandle),pdata,size);}while(0)
 #define  UART5_SendString(pStr)          SendString(&(gstUart5.UartHandle),pStr)
-
+void Uart5SendBytes(char * data,unsigned int len);
 #endif
 /*********************************************************************************************************************/
 
 
-
+/**************************                        串口 6 7                               ******************************/
 #ifdef USE_USART6
 extern  stUART_BaseType   gstUart6;
 #define COM6_SendBytes(pdata,size)       do{ HAL_UART_Transmit(&(gstUart6.UartHandle),pdata,size,UART_TX_TIME_OUT);}while(0)
@@ -191,6 +192,8 @@ extern  stUART_BaseType   gstUart7;
 #define COM7_RecBytes(pdata,size)        do{HAL_UART_Receive_IT(&(gstUart7.UartHandle),pdata,size);}while(0)
 #define  UART7_SendString(pStr)          SendString(&(gstUart7.UartHandle),pStr)
 #endif
+/*********************************************************************************************************************/
+
 
 /**************************                        串口 操作                               ******************************/
 
@@ -220,9 +223,7 @@ extern  stUART_BaseType   gstUart7;
 void SendString(UART_HandleTypeDef *huart,  char *pStr);
 void UART_SendByte(UART_HandleTypeDef *huart,  char data);
 void print_null(const char *fmt,...);
-unsigned char  ReceviceByte(stUART_BaseType *pUartBase,char *pData,unsigned int timeout);
-
-
+unsigned char  ReceviceByte(stUART_BaseType *pUartBase,char *pData,unsigned int timeout); 
 /*********************************************************************************************************************/
 #endif
 

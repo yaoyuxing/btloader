@@ -39,14 +39,17 @@ int RefreshSysInfo(void);
   */
 void SystemInfoInit_BtLoader(void);
 /**
-  * @brief   bootloader中初始化
-  *          固定长度升级结构和控制结构 
+  * @brief   App中初始化
+  *          升级结构和控制结构为固定长度
   * @param   pAppSysInfo:APP需要存储的系统信息起始地址指针
   * @param   len: APP系统信息数据长度
+  *	@retval  返回值 上次设置的长度
   */
-void SystemInfoInit_App(void * pAppSysInfo,unsigned int len);
-
-
+unsigned int  SystemInfoInit_App(void * pAppSysInfo,unsigned int len);               //App 调用系统信息初始化
+/**
+  * @brief  擦拭系统信息block
+  */
+void EraseSysInfoBlock(void);   
 
  
 #endif 

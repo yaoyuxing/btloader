@@ -91,6 +91,7 @@ unsigned short cgu16NorFlash_WriteBuff[NOR_FLASH_WRITE_BUFF_SIZE]={0};//读取擦拭
 
 static  void  BSP_NOR_MspInit(NOR_HandleTypeDef  *hnor, void *Params); 
 static  int   GetStartADR(unsigned int adr);
+static unsigned char NorFlashCheckWriteAddr( unsigned char *buf,unsigned int sector,unsigned int cnt);
 /* Flash Driver Control Block */
 static bool DQ6_Polling (uint32_t addr);
  ARM_FLASH_CAPABILITIES GetCapabilities (void);
@@ -140,12 +141,11 @@ static void fs_test_task(void *param)
 	 NorFlash_ReadDisk(readbuf,ADR,1);
 	 NorFlash_WriteDisk("123456789",ADR ,1);
 	 NorFlash_ReadDisk(readbuf,ADR,1);
-	#else 
-	
+	#else  
 	res=	f_mount (&fatfs[0],"0:",0 );	
 //	res=f_mkfs("0:",FM_FAT|FM_SFD,0,work,sizeof work );
 	res=f_mkdir("0:test.txt");
-  if(res==FR_NO_FILESYSTEM)
+	if(res==FR_NO_FILESYSTEM)
   	res=f_mkfs("0:",FM_FAT|FM_SFD,0,work,sizeof work );
 	else f_unlink("0:test.txt");
 	// NorFlash_ReadDisk(readbuf,0,1); 
@@ -611,7 +611,7 @@ static int  GetStartADR(unsigned int adr)
 unsigned char  NorFlash_ReadDisk(unsigned char *buf,unsigned int sector,unsigned int cnt)
 {
 //	  taskENTER_CRITICAL();           //进入临界区
-   int  sta=HAL_NOR_STATUS_SUCCESS;   
+	  int  sta=HAL_NOR_STATUS_SUCCESS;   
 	  ReadData (sector*NOR_FLASH_FS_SECTOR_SIZE,buf,cnt*NOR_FLASH_FS_BLOCK_SIZE/2);
 	  while( GetStatus().busy==1 );
 	//    taskEXIT_CRITICAL();            //退出临界区 
@@ -627,22 +627,28 @@ unsigned char  NorFlash_ReadDisk(unsigned char *buf,unsigned int sector,unsigned
 unsigned char NorFlash_WriteDisk( unsigned char *buf,unsigned int sector,unsigned int cnt)
 {
 	 int  sta=HAL_NOR_STATUS_SUCCESS;   
-   int  StartADR=0; 
+	 int  StartADR=0; 
 	 int  offset=0;
 	 StartADR =GetStartADR(sector);
 	 offset=sector*NOR_FLASH_FS_SECTOR_SIZE-StartADR;
 	 if(StartADR!=-1)
-	 {
-		// 	  taskENTER_CRITICAL();           //进入临界区
+	 { 
+		if( NorFlashCheckWriteAddr(buf,sector,cnt)==1)
+		{ 
 		  ReadData (StartADR,cgu16NorFlash_WriteBuff,NOR_FLASH_WRITE_BUFF_SIZE);
-	    while( GetStatus().busy==1 );
+	      while( GetStatus().busy==1 );
 		  memcpy((void*)&cgu16NorFlash_WriteBuff[offset/2],buf,cnt*NOR_FLASH_FS_BLOCK_SIZE);
 		  EraseSector(StartADR); 
-	    while( GetStatus().busy==1 ); 
-	    ProgramData(StartADR,cgu16NorFlash_WriteBuff,NOR_FLASH_WRITE_BUFF_SIZE);
+	      while( GetStatus().busy==1 ); 
+	      ProgramData(StartADR,cgu16NorFlash_WriteBuff,NOR_FLASH_WRITE_BUFF_SIZE);
 		  while( GetStatus().busy ==1);
-		  sta=HAL_NOR_STATUS_SUCCESS;
-		 	//   taskEXIT_CRITICAL();            //退出临界区 
+		  sta=HAL_NOR_STATUS_SUCCESS; 
+		}
+		else
+		{
+		  ProgramData(sector*NOR_FLASH_FS_SECTOR_SIZE,buf,cnt*NOR_FLASH_FS_BLOCK_SIZE/2);
+		  while( GetStatus().busy ==1);
+		}
 	 }
 	 else 
 	 {
@@ -650,7 +656,22 @@ unsigned char NorFlash_WriteDisk( unsigned char *buf,unsigned int sector,unsigne
 	 }
 	return sta;
 }
-
+//norflash写入地址判断是否为0xff
+//buf:写数据缓存区
+//sector:扇区地址
+//cnt:扇区个数	
+//返回值:错误状态;0,未写入过数据;有写入过数据需擦拭;	
+static unsigned char NorFlashCheckWriteAddr( unsigned char *buf,unsigned int sector,unsigned int cnt)
+{
+	unsigned int len=cnt*NOR_FLASH_FS_BLOCK_SIZE/2;
+	NorFlash_ReadDisk((unsigned char*)cgu16NorFlash_WriteBuff,sector,cnt);
+	while(len--)
+	{
+		if(cgu16NorFlash_WriteBuff[len]!=0xffff)
+			return 1;
+	}
+	return 0;
+}
 
 
  

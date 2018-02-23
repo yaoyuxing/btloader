@@ -12,27 +12,31 @@
 #include "interflash.h"   
 #include "stdlib.h"
 #include "ymodem.h" 
+#include "crc16.h"
 
 
-
-
-stBleDataType  gstBleData; //蓝牙变量
+//蓝牙变量
+stBleDataType  							gstBleData; 
+stBleInfoType 							gstBleInfo;
+//任务句柄
 TaskHandle_t  BleTask_Handler;
+//优先级
 #define  BLE_TASK_PRIO   5
-#define  BLE_STK_SIZE   1024 
+//栈大小
+#define  BLE_STK_SIZE   4096 
 
-
+//蓝牙操作函数
 static void BleUartInit(unsigned int Baud );
 static void BluetoothGPIOInit(void );
-static void BleReset(void);
+void BleReset(void);
 static void BleInit(void);
-static eBleErrorType BleBaudSet(unsigned int Baud);
+eBleErrorType BleBaudSet(unsigned int Baud);
 static void BleTask(void* param);
 static void BleAnalysisData(char *pData,unsigned int Len);
-static void BleUpdateApp(void);
+static eBleErrorType BleUpdateApp(void);
 static void BleGetFireInfo(void);
 static void BleAnalysisFireInfo(unsigned char *pData);
- 
+static eBleErrorType BleFactorySet(void);
 
 void CreateBleTask(void)
 {
@@ -44,65 +48,99 @@ void CreateBleTask(void)
 				(TaskHandle_t*  )&BleTask_Handler);   //任务句柄  	 	
 }
 static void BleTask(void* param)
-{  
-	//unsigned int TimeOut=0xe000000;  
-	BleUartInit(19200);                    //串口波特率设置为上次存入的波特率 
-	BleToothSendCmd(BL_MAC,BLE_CMD_READ,"");
-	#if 0
-	BleInit();    //初始化蓝牙模块 
-	#else
-	BleUartInit(115200);                    //串口波特率设置为上次存入的波特率  
-	gBleConnectStatus=SET;
-	//RunAPP(gstUpdate.unCurrentAppADDR);           //跳转APP
-	#endif
-	while(gBleConnectStatus)       //初始化连接成功后等待手机命令
+{   
+	char SaveOKChars[]={'S',0x01};   //保存成功数组 
+	char JumpOKChars[]={'J',0x01};;   //跳转成功
+	BleInit(); 			//初始化蓝牙
+	BlePrintf("ble init ok\r\n"); 
+	while(1)       //初始化连接成功后等待手机命令
 	{ 
-		#if 0
-		if(BL_CONNECTION_STATUS())//在运行过程中断连了
+		btIWDG_Refresh();
+		if(gBleAPPUpdateStatus==eAPP_JUMP_UPDATE) //app跳转升级
 		{ 
-			BleInit();         //重新连接
+			gBleAPPUpdateStatus=eNO_UPDATE;
+		 	SaveSysInfo(); 
+			gBleAPPUpdateStatus=ePREPARE_UPDATE;
+			BleSend2Phone(JumpOKChars,2);//跳转成功
 		} 
-		TimeOut--; 
-		#endif
-		
+		#if 1
+		if(BL_CONNECTION_STATUS())//在运行过程中断连了
+		{  
+			gBleConnectStatus=eBLE_UPDATE_STA_NONE;
+			//BleInit();         //重新连接
+		}  
+		else 
+		{
+			BleDelay_ms(200);
+			if(!BL_CONNECTION_STATUS())//延时防抖判断
+			gBleConnectStatus=eBLE_CONNECTED;
+		}
+		#endif  
 		if(BLE_RX_FRAME_FLAG==SET)      //接收到蓝牙串口数据帧
 		{ 
+			BlePrintf("ble got command\r\n");
 			BleAnalysisData((char*)gBleRxBuffer,gBleRxBufferLen);
-			BLE_RX_FRAME_FLAG=RESET;
+			BLE_RX_FRAME_FLAG=RESET;         //清除接收到帧标志
 			switch(gstBleData.ucCmd)
 			{
 				case BLE_CMD_UPDATE:
-					BleUpdateApp();    //升级
+					BleAnalysisFireInfo(gstBleData.ucData); //获取固件信息
+					BleUpdateApp();    			//升级
 					break;
 				case BLE_CMD_GET_INFO:
-					BleGetFireInfo(); //获取信息
+					BleGetFireInfo(); 			//获取信息
+					break;
+				case BLE_FACTORY_SET:     //出厂设置 
+					BleFactorySet();
+					gBleAPPUpdateStatus=eGET_FACTORY_DATA;
+					break;
+				case BLE_SAVE_INFO: 			//校验成功 保存设置
+					if(gBleAPPUpdateStatus==eGET_FACTORY_DATA)//设置过出厂信息
+					{
+						gBleAPPUpdateStatus=eNO_UPDATE;				//存初始状态
+						SaveSysInfo();												//保存数据
+						FactoryOK();
+						gBleAPPUpdateStatus=eFACTORY_SET_OK; //出厂设置完成
+						BleSend2Phone(SaveOKChars,2);        //保存OK应答到手机蓝牙
+					}
+					break;
+				case BLE_JUMP:
+					gBleAPPUpdateStatus=eAPP_JUMP_UPDATE;
 					break;
 			}
 		}
-	} 
-	RunAPP(gstUpdate.unCurrentAppADDR);	//没有升级直接跳转
+	}  
 } 
 /**
   * @brief  蓝牙初始化
   */
 static void BleInit(void)
 {
-	unsigned int TimeOut=0xe000000;  
+	#if  NEW_FIRE_VER
+	#else
+	unsigned int TimeOut=2000;  
 	unsigned char ucTimes=BLE_CMD_TRY_TIMES;
-	int res=0; 
-	BluetoothGPIOInit();
-	gBleConnectStatus=RESET;
+	int res=0;
+  
+//	if((gBleBaud!=BLE_DEFAULT_BAUD)&&(gBleBaud!=BLE_PENETRATE_MODE_BAUD))//读出来的波特率不正确
+//	{
+//		gBleBaud=BLE_PENETRATE_MODE_BAUD;//设置为蓝牙默认波特率
+//	}	
+	//BleUartInit(gBleBaud);                    //串口波特率设置为上次存入的波特率 
+	#endif
+	BleUartInit(19200);                    //串口波特率设置为上次存入的波特率 
+	BluetoothGPIOInit();                  //初始化ble IO
 	gBleCurrentMode=BLE_CMD_MODE_NONE;
-	if((gBleBaud!=BLE_DEFAULT_BAUD)&&(gBleBaud!=BLE_PENETRATE_MODE_BAUD))//读出来的波特率不正确
-	{
-		gBleBaud=BLE_DEFAULT_BAUD;//设置为蓝牙默认波特率
-	}	
-	BleUartInit(gBleBaud);                    //串口波特率设置为上次存入的波特率 
+	gBleConnectStatus=eBLE_UPDATE_STA_NONE;
 	if(BL_CONNECTION_STATUS()!=0) //未连接
 	{	
+		#if  NEW_FIRE_VER
+		#else
 		BleReset();        //重启  
 		BL_MRDY_PIN_RESET();  //切换到RX接收模式
-        res=BleBaudSet(BLE_PENETRATE_MODE_BAUD);    //设置为透传的波特率
+		BleToothSendCmd(BL_MAC,BLE_CMD_READ,"");
+		BleToothSendCmd(BL_ROLE,BLE_CMD_SET,"0");
+    res=BleBaudSet(BLE_PENETRATE_MODE_BAUD);    //设置为透传的波特率 
 		if(res!=0) 
 		{
 			BlePrintf("ble baud set failed res =%d\r\n",res);
@@ -117,13 +155,19 @@ static void BleInit(void)
 		{
 			BlePrintf("ble txpwr failed res =%d\r\n",res);
 		}
-		while(TimeOut--)          //连接
+		#endif
+		while(1)//TimeOut--)          //连接
 		{
+			btIWDG_Refresh();
 			if(!BL_CONNECTION_STATUS()) //有设备连接上
 			{
 				BleDelay_ms(200);
 				if(!BL_CONNECTION_STATUS())//延时防抖判断
 				{
+					#if  NEW_FIRE_VER                  //新固件直接设置标志
+					gBleConnectStatus=eBLE_CONNECTED;
+					break;
+					#else
 					while(ucTimes--)
 					{
 						res=BleToothSendCmd(BL_MODE,BLE_CMD_SET,NULL);       //发射透传命令
@@ -138,22 +182,23 @@ static void BleInit(void)
 							BlePrintf("ble connected but set mode err=%d\r\n",res);
 						}
 					}
-					if((ucTimes>=0)&&(gBleCurrentMode==BLE_PENETRATE_TRANS_MODE))
+					if(gBleCurrentMode==BLE_PENETRATE_TRANS_MODE)
 					{
-						gBleConnectStatus=BLE_CONNECTED;
+						gBleConnectStatus=eBLE_CONNECTED;
 						BlePrintf("ble connected\r\n");
 						break;
 					}
+					#endif
 				} 
 			}
-			BlePrintf("ble waiting for connecting\r\n");
-			BleDelay_ms(1000); 
+			//BleDelay_ms(500); 
+			//BlePrintf("ble waiting for connecting\r\n");
 		} 
-		BlePrintf("ble no connecting\r\n");
+		BlePrintf("ble no connecting\r\n");  
 	}
 	else
 	{
-		gBleConnectStatus=SET;               //已连接直接设置标志
+		gBleConnectStatus=eBLE_CONNECTED;               //已连接直接设置标志
 		BlePrintf("ble already connected\r\n");
 	}
 }
@@ -171,6 +216,8 @@ static void BleUartInit(unsigned int Baud )
 	gBleUartHandle.Init.Mode=UART_MODE_TX_RX;		    //
 	HAL_UART_Init( (UART_HandleTypeDef*)&gBleUartHandle); 
 	HAL_UART_Receive_IT(&gstUart5.UartHandle,(uint8_t *)&gstUart5.ucRecByte,1); 
+	 gstUart5.eRxMode=UART_RX_FRAME_MODE;
+	//BleCmdNormalRxMode_Exit();
 	//BleRxByteITSet(gBleRxByte);
 }
 /**
@@ -178,6 +225,13 @@ static void BleUartInit(unsigned int Baud )
   */
 static void BluetoothGPIOInit(void )
 {
+	#if NEW_FIRE_VER
+	GPIO_InitTypeDef GPIO_Initure;
+	BL_CONNECTION_RCC()	;
+	GPIO_Initure.Pin=BL_CONNECTION_PIN; 		//
+	GPIO_Initure.Mode=GPIO_MODE_INPUT;  		//输入模式
+	HAL_GPIO_Init(BL_CONNECTION_GPIO,&GPIO_Initure);
+	#else
 	GPIO_InitTypeDef GPIO_Initure;
 	BL_MRDY_RCC();           		//开启GPIOB时钟
 	BL_CONNECTION_RCC()	;
@@ -202,15 +256,19 @@ static void BluetoothGPIOInit(void )
 	
 	HAL_GPIO_Init(BL_RESET_GPIO,&GPIO_Initure);
 	HAL_GPIO_WritePin(BL_RESET_GPIO,BL_RESET_PIN,GPIO_PIN_SET); 
+	#endif
 }
 /**
   * @brief  蓝牙硬件复位
   */
-static void BleReset(void)
+void BleReset(void)
 {
+	#if NEW_FIRE_VER
+	#else
 	BL_RESET_PIN_RESET();
 	BleDelay_ms(20);
 	BL_RESET_PIN_SET();
+	#endif
 }
 
 
@@ -221,7 +279,7 @@ static void BleReset(void)
   * @retval 错误代码 eBleErrorType
   */
 #define BAUD_STR_MAX       10
-static eBleErrorType BleBaudSet(unsigned int Baud)
+eBleErrorType BleBaudSet(unsigned int Baud)
 { 
 	eBleErrorType res; 
 	char temp[BAUD_STR_MAX]={0};  
@@ -305,11 +363,15 @@ static eBleErrorType BleBaudSet(unsigned int Baud)
 	}	
 	return	BLE_NO_ERR;
 } 
-
+/**
+  * @brief  蓝牙解析固件信息函数 "	U{\"Version\":{\"ModuleName\":\"%s\",\"HardVersion\":\"%s\",\"FireVersion\":\"%s\",\"DataTime\":\"%s\"}}" 
+  * @note   根据协议固定偏移取数据
+  * @param  pData: 数据操作指针    
+  */
 static void BleAnalysisFireInfo(unsigned char *pData)
 {
 	unsigned char cnt=0;
-	memset((void*)&gstUpdate.stFireInfo,0,sizeof gstUpdate.stFireInfo);
+	memset((void*)&gstUpdate.stFireInfo,0,sizeof (gstUpdate.stFireInfo)-sizeof(gstUpdate.stFireInfo.SN));
 	pData+=MODULE_NAME_POS;
 	for(cnt=0;pData[0]!=END_BYTE_2;cnt++)
 	{
@@ -332,57 +394,110 @@ static void BleAnalysisFireInfo(unsigned char *pData)
 	}
 }
 #define TEMP_BUF_MAX   1024
+/**
+  * @brief  蓝牙获取固件信息函数
+  * @note   向手机端发送固件信息  
+  */
 static void BleGetFireInfo(void)
 { 
-	char * pdata=malloc(TEMP_BUF_MAX),*pSendStr=malloc(TEMP_BUF_MAX);
-	if(pdata==NULL)     while(1);
-	if(pSendStr==NULL)  while(1);
+	char   pdata[TEMP_BUF_MAX]={0}; 
 	memset(pdata,0,TEMP_BUF_MAX);  
-	sprintf(pdata,"{\"Version\":[{\"ModuleName\":\"%s\",\"HardVersion\":\"%s\",\"FireVersion\":\"%s\",\"DataTime\":\"%s\"}]}"\
+	sprintf(pdata,"G{\"Version\":{\"ModuleName\":\"%s\",\"HardVersion\":\"%s\",\"FireVersion\":\"%s\",\"DataTime\":\"%s\"}}"\
 	,gstUpdate.stFireInfo.ModuleName\
 	,gstUpdate.stFireInfo.HardVersion\
 	,gstUpdate.stFireInfo.FireVersion\
 	,gstUpdate.stFireInfo.Time);  
 	BleSend2Phone(pdata,strlen(pdata)); 
-	free(pSendStr);
-	free(pdata);
-	pSendStr=NULL;
-	pdata=NULL;
+	gBleAPPUpdateStatus=ePREPARE_UPDATE;      // 
 } 
-static void BleUpdateApp(void)            
+/**
+  * @brief  蓝牙出厂设置
+  * @note   设置sn号等
+  * @retval 错误代码 eBleErrorType
+  */
+static eBleErrorType BleFactorySet(void)    
 {
-	char *pData=NULL;
-	unsigned int unBinDatalen=0;
-	BleAnalysisFireInfo(gstBleData.ucData); 
-	BleDelay_ms(500);
- 	BLE_RX_BYTE_FLAG=RESET;
-	BleCmdNormalRxMode_Enter();   //蓝牙串口进入normal接收状态
+  char sntemp[15]={0};
+	SetSerialNumber(gstBleData.ucData,gstBleData.usDataLen);		 
+	sprintf(sntemp,"F%s",gpBleSerialNum);
+	BleSend2Phone(sntemp,strlen(sntemp));//发送给手机进行校验SN
+	return BLE_NO_ERR;
+}
+/**
+  * @brief  蓝牙升级函数
+  * @note   获取固件信息并存储，取bin文件解析存储跳转 
+  * @retval 错误代码 eBleErrorType
+  */
+static eBleErrorType BleUpdateApp(void)            
+{
+  char ucStartChar[]={'U',0x02};
+	unsigned 	char *pData=NULL;            //bin文件操作指针
+	unsigned int unBinDatalen=0; //bin文件大小 
+//	if((gBleUpdateMode!=eUPDATE_BLE)&&gBleUpdateMode) //如果有其他升级
+//		 return BLE_UPDATE_BSY; 							//返回升级忙错误 
+	gBleAPPUpdateStatus=eSTART_UPDATE;  
+ 	BLE_RX_BYTE_FLAG=RESET; 
+	BleSend2Phone(ucStartChar,2); //发送开始ymodem应答
+	BleDelay_ms(200);//延时发送
+	BleCmdNormalRxMode_Enter();   //蓝牙串口进入normal接收状态 
 	BLE_RX_BYTE_FLAG=RESET;
-	gstUpdate.unCurrentAppSize= Ymodem_Receive(gucAppBuf);      //ymodem接收 bin文件
+	gstRxCtrl.ucUseEscape=0;
+	//while(1)
+	{
+		
+//		gBleRxBufferLen=0;
+//		memset(gBleRxBuffer,0,sizeof (gBleRxBuffer));
+//		BleSendByte("C"); 
+//		while(1);
+//				gBleRxBufferLen=0;
+//		memset(gBleRxBuffer,0,sizeof (gBleRxBuffer));
+//		BleSendByte("C"); 
+//				gBleRxBufferLen=0;
+//		memset(gBleRxBuffer,0,sizeof (gBleRxBuffer));
+//		BleSendByte("C"); 
+//				gBleRxBufferLen=0;
+//		memset(gBleRxBuffer,0,sizeof (gBleRxBuffer));
+//		BleSendByte("C"); 
+	}
+//	taskENTER_CRITICAL();
+	do
+	{
+		//__set_FAULTMASK(1);
+		gstUpdate.unCurrentAppSize= Ymodem_Receive(gucAppBuf);      //ymodem接收 bin文件
+		//BleDelay_ms(1000);
+	}while(gstUpdate.unCurrentAppSize==0);
+//	taskEXIT_CRITICAL();
 	BleCmdNormalRxMode_Exit(); //蓝牙串口退出normal接收状态
-	gstUpdate.unCurrentAppADDR=(gstUpdate.unCurrentAppADDR==USER1_APP_ADDR)?USER2_APP_ADDR:USER1_APP_ADDR;
-	pData=pGetAppBin((char *)gucAppBuf,gstUpdate.unCurrentAppSize,gstUpdate.unCurrentAppADDR); //取bin文件位置指针
-	if(pData==NULL )
+	gstUpdate.unCurrentAppADDR=(gstUpdate.unCurrentAppADDR==USER1_APP_ADDR)?USER2_APP_ADDR:USER1_APP_ADDR; //取与上次升级位置不同的位置进行升级
+	pData=pGetAppBin(gucAppBuf,gstUpdate.unCurrentAppSize,gstUpdate.unCurrentAppADDR); //取bin文件位置指针
+	if(pData==NULL)
 	{		
 		BlePrintf("ble update addr err");
 		while(1);
 	}
-	unBinDatalen=(*(unsigned int *)pData); //取bin文件长度
+	unBinDatalen=(*(unsigned int *)pData); 		//取bin文件长度
 	gstUpdate.unCurrentAppSize=unBinDatalen;
-	pData+=4;//偏移到bin文件开始位置
-    if(CheckAppBin((unsigned int *)pData)!=0)//检测APPbin文件
+	pData+=4;									//偏移到bin文件开始位置
+	if(CheckAppBin((unsigned int *)pData)!=0)	//检测APPbin文件
 	{
 		BlePrintf("ble update AppBin err");
 		while(1);
 	}
-	SaveAppBackup(pData,unBinDatalen);             //APP备份
+	//SaveAppBackup(pData,unBinDatalen);             //APP备份 
+	
+	AppWrite2Flash(pData);
+	btIWDG_Refresh();
+	//InterFlash_Program(gstUpdate.unCurrentAppADDR,pData,gstUpdate.unCurrentAppSize, FLASH_TYPEPROGRAM_BYTE);//写入APP
+	//BleDelay_ms(1000);
+	gBleAPPUpdateStatus=eWRITE_APP_OK;
+	delay_ms(1000);
 	if(gstUpdate.unCurrentAppADDR==USER1_APP_ADDR)      //判断位置将相应状态记录
 	{
-		gstUpdate.eAppUpdateStatus=USR1_START_UPDATE;
+		gBleAPPUpdateStatus=eUSR1_UPDATE_CHECK;
 	}
 	else if(gstUpdate.unCurrentAppADDR==USER2_APP_ADDR)
 	{
-		gstUpdate.eAppUpdateStatus=USR2_START_UPDATE;
+		gBleAPPUpdateStatus=eUSR2_UPDATE_CHECK;
 	}
 	else 
 	{
@@ -390,27 +505,34 @@ static void BleUpdateApp(void)
 		while(1);
 	}
 	SaveSysInfo();//存储状态信息
-	RefreshSysInfo();
-	InterFlash_Program(gstUpdate.unCurrentAppADDR,pData,gstUpdate.unCurrentAppSize, FLASH_TYPEPROGRAM_BYTE);//写入APP
-	//BleDelay_ms(1000);
-	RunAPP(gstUpdate.unCurrentAppADDR);           //跳转APP
+//	RefreshSysInfo(); 
+	
+	btResetSysForJump();           //跳转APP
+	return BLE_NO_ERR;
 }
-/*
-char :headpos 0
-char :cmd     1
-unsigned short: len
-char *:data
-char :tailpos
- //  datalen : len-cmdlen
-*/
+/**
+  * @brief  蓝牙解析接收串口数据函数
+  * @note   接收到的串口数据取出命令和数据和数据长度
+  * @param  pData: 数据操作指针 
+  * @param  Len: 数据长度
+  * @retval 错误代码 eBleErrorType
+  */
 static void BleAnalysisData(char *pData,unsigned int Len)
 {
+	unsigned short int crctemp=0;
 	gstBleData.ucCmd=pData[3];                          //接收命令
 	gstBleData.usDataLen=(pData[1]<<8)+pData[2]-1;      //数据长度
+	gstBleData.usCRC16=(pData[Len-3]<<8)+pData[Len-2];
+	crctemp=usCrc16((unsigned char *)&pData[3],gstBleData.usDataLen+1);
+	if(crctemp!=gstBleData.usCRC16)
+		 crctemp=crctemp;//校验失败
 	if(gstBleData.usDataLen<BLE_DATA_BUF_MAX)               //数据小于buf大小
-	memcpy(gstBleData.ucData,(void*)&pData[4],gstBleData.usDataLen);//拷贝数据到buf
+	{
+		memset(gstBleData.ucData,0,sizeof(gstBleData.ucData));
+		memcpy(gstBleData.ucData,(void*)&pData[4],gstBleData.usDataLen);//拷贝数据到buf
+	}
 } 
-#define SEND_2PHONE_BUF_MAX   1024
+
 
 int  str_esc(char *pReturn,char*pSource,char target1,char target2,unsigned int len )
 {
@@ -447,9 +569,10 @@ int  str_esc(char *pReturn,char*pSource,char target1,char target2,unsigned int l
 	return nreturn;
 }
 
+#define SEND_2PHONE_BUF_MAX   1024
 /**
   * @brief  发送数据到手机蓝牙
-  * @note   数据进行转义校验加帧头尾进行发送
+  * @note   数据进行转义校验加帧头尾进行发送，校验转义前数据
   * @param  pData: 数据指针
   * @param  len: 数据长度
   */
@@ -459,7 +582,7 @@ void BleSend2Phone(char *pData,unsigned int len )
 	char cDataBufTemp[SEND_2PHONE_BUF_MAX]={0};
 	char cHead=BLE_FRAME_HEAD_STR,cTail=BLE_FRAME_TAIL_STR;
 	unsigned short  crc16=0,sendlen; 
-	crc16=bt_crc16((uint8_t*)pData,len);   //计算校验
+	crc16=bt_crc16((uint8_t*)&pData[1],len);   //去掉命令头计算校验
 	
 	//cTemp[0]=BLE_FRAME_HEAD_STR ;//取头 
 	cDataBufTemp[1]=len&0x00ff;          //取低字节
@@ -471,12 +594,10 @@ void BleSend2Phone(char *pData,unsigned int len )
 	cDataBufTemp[2+len]=crc16>>8;          //取高字节  
 	
 	sendlen=str_esc(cDataBuf,cDataBufTemp,BLE_FRAME_HEAD_STR,BLE_FRAME_TAIL_STR,len+4); //对数据中和帧尾字符相同的进行转义
-	
-	BleSendByte(cHead); //发送头
-	BleSendBytes((unsigned char *)cDataBuf,sendlen);//发送 
-	BleSendByte(cTail);//发送尾
-	
-	
+   
+	Uart5SendBytes(&cHead,1); //发送头
+	Uart5SendBytes(( char *)cDataBuf,sendlen);//发送 
+	Uart5SendBytes(&cTail,1);//发送尾  
 }
 
 

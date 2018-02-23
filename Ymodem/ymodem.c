@@ -29,9 +29,9 @@
 #include "ble_update.h"
 #include "stdlib.h"
 #include "string.h"
-
-
-
+#include "delay.h"
+#include "uart.h"
+#include "bootloader.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -40,13 +40,14 @@
 uint8_t file_name[FILE_NAME_LENGTH];
 uint32_t FlashDestination = 0x50000; /* Flash user program offset */
 uint16_t PageSize = 128;
-uint32_t EraseCounter = 0x0;
+int32_t EraseCounter = 0x0,packet_length=0;
 uint32_t NbrOfPage = 0;
 int FLASHStatus = 0;
 uint32_t RamSource; 
 
-
-
+uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD]={0};
+unsigned short Datalen=0;
+unsigned char RecStartFlag=0;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 uint16_t Cal_CRC16(const uint8_t* data, uint32_t size);
@@ -57,11 +58,31 @@ uint16_t Cal_CRC16(const uint8_t* data, uint32_t size);
   * @retval 0: Byte received
   *         -1: Timeout
   */
-static  int32_t Receive_Byte (uint8_t *c, uint32_t timeout)
+static  int32_t Receive_Byte (uint8_t *c, unsigned short len ,uint32_t timeout)
 {
-	 
-  if(BleReceviceByte((char *)c,timeout)==0) return 0;
-  return -1;
+	#if 1
+	//char temp[2]={0};
+  //if(BleReceviceByte((char *)c,timeout)==0) return 0;
+	//temp[0]=*c;
+	//BlePrintf(temp);..
+	
+	HAL_UART_Receive(&gstUart5.UartHandle, c, len, NAK_TIMEOUT);
+	
+  return 0;
+	#else
+	while(timeout--)
+	{
+		if(UART5_RX_GOT_BYTE_FLAG==SET)
+		{ 
+			//HAL_UART_Receive_IT(&gstUart5.UartHandle,(uint8_t *)&gstUart5.ucRecByte,1);  
+			*c=gstUart5.ucRecByte;
+			UART5_RX_GOT_BYTE_FLAG=RESET;
+			return 0;
+		}
+	}
+	
+	return -1;
+	#endif
 }
 
 /**
@@ -89,55 +110,51 @@ static uint32_t Send_Byte (uint8_t c)
   */
 static int32_t Receive_Packet (uint8_t *data, int32_t *length, uint32_t timeout)
 {
-  uint16_t i, packet_size;
-  uint8_t c;
-  *length = 0;
-	
-  if (Receive_Byte(&c, timeout) != 0)
-  {
-    return -1;
-  }
-  switch (c)
-  {
-    case SOH:
-      packet_size = PACKET_SIZE;
-      break;
-    case STX:
-      packet_size = PACKET_1K_SIZE;
-      break;
-    case EOT:
-      return 0;
-    case CA:
-      if ((Receive_Byte(&c, timeout) == 0) && (c == CA))
-      {
-        *length = -1;
-        return 0;
-      }
-      else
-      {
-        return -1;
-      }
-    case ABORT1:
-    case ABORT2:
-      return 1;
-    default:
-      return -1;
-  }
-  *data = c;
-  for (i = 1; i < (packet_size + PACKET_OVERHEAD); i ++)
-  {
-    if (Receive_Byte(data + i, timeout) != 0)
-    {
-      return -1;
-    }
-  }
-  if (data[PACKET_SEQNO_INDEX] != ((data[PACKET_SEQNO_COMP_INDEX] ^ 0xff) & 0xff))
-  {
-    return -1;
-  }
-  *length = packet_size;
-	
-  return 0;
+		while(timeout--)
+		{
+		 if(UART5_RX_GOT_FRAME_FLAG==SET)
+		 {
+			 
+			
+			 if (packet_data[PACKET_SEQNO_INDEX] != ((packet_data[PACKET_SEQNO_COMP_INDEX] ^ 0xff) & 0xff))
+			 {
+					 Datalen=0;
+					 memset(packet_data,0,sizeof(packet_data));
+					 UART5_RX_GOT_FRAME_FLAG=0;
+					 RecStartFlag=0; 
+					if(data)
+					{
+						return -9;
+					}
+					else return -1;
+			 }
+			 Datalen=0;
+			 RecStartFlag=0; 
+			 UART5_RX_GOT_FRAME_FLAG=RESET;
+			 return 0;
+		 }
+		} 
+		if(RecStartFlag)
+		{ 
+			if(data)
+			{
+				Datalen=0;
+				memset(packet_data,0,sizeof(packet_data));
+				UART5_RX_GOT_FRAME_FLAG=0;
+				RecStartFlag=0;
+				return -9;
+			}
+			else return -1;
+		}
+		else 
+		{ 
+		 
+		} 
+		Datalen=0;
+		memset(packet_data,0,sizeof(packet_data));
+		UART5_RX_GOT_FRAME_FLAG=0;
+		RecStartFlag=0;
+		return -1;
 }
 
 /**
@@ -147,17 +164,20 @@ static int32_t Receive_Packet (uint8_t *data, int32_t *length, uint32_t timeout)
   */
 int32_t Ymodem_Receive (uint8_t *buf)
 {
-  uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD], file_size[FILE_SIZE_LENGTH], *file_ptr, *buf_ptr;
-  int32_t i,   packet_length, session_done, file_done, packets_received, errors, session_begin, size = 0;
+  uint8_t   file_size[FILE_SIZE_LENGTH], *file_ptr, *buf_ptr;
+  int32_t i,     session_done, file_done, packets_received, errors, session_begin, size = 0;
   int16_t crc16,datacrc16;
-  /* Initialize FlashDestination variable */
- 
-
+//	uint8_t nakflag=0;
+	uint8_t begin=0;
+  /* Initialize FlashDestination variable */ 
+	Send_Byte(MODE_C);
   for (session_done = 0, errors = 0, session_begin = 0; ;)
   {
     for (packets_received = 0, file_done = 0, buf_ptr = buf; ;)
     {
-      switch (Receive_Packet(packet_data, &packet_length, NAK_TIMEOUT))
+			btIWDG_Refresh();
+			if(session_begin==1)  begin=1;
+      switch (Receive_Packet( &begin, &packet_length, NAK_TIMEOUT))
       {
         case 0:
           errors = 0;
@@ -169,28 +189,38 @@ int32_t Ymodem_Receive (uint8_t *buf)
               return 0;
             /* End of transmission */
             case 0:
-              Send_Byte(ACK);
-              file_done = 1;
+              Send_Byte(ACK); 
+							Send_Byte(MODE_C);
               break;
             /* Normal packet */
             default:
               if ((packet_data[PACKET_SEQNO_INDEX] & 0xff) != (packets_received & 0xff))
               {
+//								if(errors>20) //错误次数太多退出
+//								{
+//									Send_Byte(CA);
+//									return 0;
+//								}
+								if(packet_data[PACKET_SEQNO_INDEX]==0)
+								{
+									Send_Byte(ACK);
+									file_done=1;
+									return size;
+								}
                 Send_Byte(NAK);
+								errors++; 
               }
               else
               {
                 if (packets_received == 0)
                 { 
-					crc16=Cal_CRC16((uint8_t *)(packet_data+PACKET_HEADER),packet_length);//对数据进行CRC计算
-					datacrc16=( packet_data[packet_length+PACKET_HEADER]<<8)+packet_data[packet_length+PACKET_HEADER+1];//取crc值
-					if(datacrc16!=crc16)                         //对比crc
-					{ 
-						
-						Send_Byte(NAK);
-						Send_Byte(MODE_C); 
-						break;
-					}  
+									crc16=Cal_CRC16((uint8_t *)(packet_data+PACKET_HEADER),packet_length);//对数据进行CRC计算
+									datacrc16=( packet_data[packet_length+PACKET_HEADER]<<8)+packet_data[packet_length+PACKET_HEADER+1];//取crc值
+									if(datacrc16!=crc16)                         //对比crc
+									{  
+										Send_Byte(NAK); 
+										break;
+									}  
                   /* Filename packet */
                   if (packet_data[PACKET_HEADER] != 0)
                   {
@@ -206,23 +236,26 @@ int32_t Ymodem_Receive (uint8_t *buf)
                     }
                     file_size[i++] = '\0';
                     size=atoi((char *)file_size); 
+										memset(packet_data,0,sizeof(packet_data));
                     Send_Byte(ACK);
                     Send_Byte(MODE_C);
+										UART5_RX_GOT_BYTE_FLAG=RESET; 
                   }
                   /* Filename packet is empty, end session */
                   else
-                  {
-                    Send_Byte(ACK);
+                  { 
+										Send_Byte(ACK); 
                     file_done = 1;
-                    session_done = 1;
-                    break;
+                    session_done = 1; 
+										UART5_RX_GOT_BYTE_FLAG=RESET;
                   }
                 }
                 else
                 {
                   memcpy(buf_ptr, packet_data + PACKET_HEADER, packet_length);
                   buf_ptr+=packet_length; 
-                  Send_Byte(ACK);
+                  Send_Byte(ACK); 
+									UART5_RX_GOT_BYTE_FLAG=RESET;									
                 }
                 packets_received ++;
                 session_begin = 1;
@@ -233,18 +266,37 @@ int32_t Ymodem_Receive (uint8_t *buf)
           Send_Byte(CA);
           Send_Byte(CA);
           return -3;
-        default:
-          if (session_begin > 0)
+				case -9:
+					if (session_begin > 0)
           {
-            errors ++;
-          }
+            errors ++;  
+						Send_Byte(NAK);  
+          }  
+					else 
+					{
+						Send_Byte(MODE_C);
+					}
           if (errors > MAX_ERRORS)
           {
             Send_Byte(CA);
             Send_Byte(CA);
             return 0;
+          } 
+					break;
+        default:
+          if (session_begin > 0)
+          {
+            errors ++; 
+          }  
+					else 
+					{
+						Send_Byte(MODE_C);
+					} 
+          if (errors > MAX_ERRORS)
+          {
+            Send_Byte(NAK); 
           }
-          Send_Byte(MODE_C);
+          
           break;
       }
       if (file_done != 0)
@@ -460,7 +512,7 @@ uint8_t Ymodem_Transmit (uint8_t *buf, const uint8_t* sendFileName, uint32_t siz
        Send_Byte(tempCheckSum);
     } 
     /* Wait for Ack and 'C' */
-    if (Receive_Byte(&receivedC[0], 10000) == 0)  
+    if (Receive_Byte(&receivedC[0],1,10000) == 0)  
     {
       if (receivedC[0] == ACK)
       { 
@@ -520,7 +572,7 @@ uint8_t Ymodem_Transmit (uint8_t *buf, const uint8_t* sendFileName, uint32_t siz
       }
       
       /* Wait for Ack */
-      if ((Receive_Byte(&receivedC[0], 100000) == 0)  && (receivedC[0] == ACK))
+      if ((Receive_Byte(&receivedC[0],1, 100000) == 0)  && (receivedC[0] == ACK))
       {
         ackReceived = 1;  
         if (size > pktSize)
@@ -563,7 +615,7 @@ uint8_t Ymodem_Transmit (uint8_t *buf, const uint8_t* sendFileName, uint32_t siz
     Send_Byte(EOT);
     /* Send (EOT); */
     /* Wait for Ack */
-      if ((Receive_Byte(&receivedC[0], 10000) == 0)  && receivedC[0] == ACK)
+      if ((Receive_Byte(&receivedC[0],1 ,10000) == 0)  && receivedC[0] == ACK)
       {
         ackReceived = 1;  
       }
@@ -602,7 +654,7 @@ uint8_t Ymodem_Transmit (uint8_t *buf, const uint8_t* sendFileName, uint32_t siz
     Send_Byte(tempCRC & 0xFF);
   
     /* Wait for Ack and 'C' */
-    if (Receive_Byte(&receivedC[0], 10000) == 0)  
+    if (Receive_Byte(&receivedC[0],1 ,10000) == 0)  
     {
       if (receivedC[0] == ACK)
       { 
@@ -627,7 +679,7 @@ uint8_t Ymodem_Transmit (uint8_t *buf, const uint8_t* sendFileName, uint32_t siz
     Send_Byte(EOT);
     /* Send (EOT); */
     /* Wait for Ack */
-      if ((Receive_Byte(&receivedC[0], 10000) == 0)  && receivedC[0] == ACK)
+      if ((Receive_Byte(&receivedC[0],1, 10000) == 0)  && receivedC[0] == ACK)
       {
         ackReceived = 1;  
       }

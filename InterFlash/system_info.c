@@ -40,14 +40,13 @@
 
 #define  pstSysInfoBase  ( ( stSystemInformationType * ) SYSTEM_INIT_INFO_ADDR)  //系统信息存储地址转换为结构指针
  
-static void RefreshCurrentRam(void);
-static void EraseSysInfoBlock(void);   
+static void RefreshCurrentRam(void); 
 static void SaveSysInfoBackup(void);
 static void RefreshCurrentRam(void);
 /**
   * @brief  擦拭系统信息block
   */
-static void EraseSysInfoBlock(void)                    
+void EraseSysInfoBlock(void)                    
 {
 	InterFlash_EraseSector(SYSTEM_INIT_INFO_ADDR,NV_SIZE_MAX);         
 }
@@ -317,8 +316,7 @@ static void RefreshCurrentRam(void)
 static void RefreshSysinfoStruct(void)
 {
 	unsigned char *pSource=NULL;    //源数据指针
-	unsigned char *pData=NULL;       //RAM数据指针 
-	unsigned int  unAddr=0;         //地址
+	unsigned char *pData=NULL;       //RAM数据指针  
 	unsigned int  cnt=0;
 	pSource=(  unsigned char  *)SYSTEM_INIT_INFO_ADDR;             //获取flash地址指针
 	for(cnt=0,pData=(void*)&gstSystemInfo;cnt<SYS_INFO_CTRL_STRUCT_SIZE;cnt++) //读取控制结构体数据
@@ -350,15 +348,12 @@ void SystemInfoInit_BtLoader(void)
 		gstSystemInfo.pucAppSysInfo=malloc(APP_SYS_INFO_SIZE);  //开辟空间
 		//size 
 		SYS_INFO_SECTOR_SIZE=(SYS_INFO_CTRL_STRUCT_SIZE+APP_SYS_INFO_SIZE+BOOT_SYS_INFO_SIZE);      //初始化总长度   
-		gstSystemInfo.unBlockDevideCntAmount= (NV_SIZE_MAX /SYS_INFO_SECTOR_SIZE);                //128k系统存储区分的总sector数
-		
-		
+		gstSystemInfo.unBlockDevideCntAmount= (NV_SIZE_MAX /SYS_INFO_SECTOR_SIZE);                //128k系统存储区分的总sector数 
 		
 		gstSystemInfo.unPos=UNSIGNED_INT_VAL_MAX;	        //存两次做一次备份
 		EraseSysInfoBlock();
 		SaveSysInfo();
 		SaveSysInfo();  
-		
 	}
 	else
 	{
@@ -380,11 +375,13 @@ void SystemInfoInit_BtLoader(void)
   *          升级结构和控制结构为固定长度
   * @param   pAppSysInfo:APP需要存储的系统信息起始地址指针
   * @param   len: APP系统信息数据长度
+  *	@retval  返回值 上次设置的长度
   */
-void SystemInfoInit_App(void * pAppSysInfo,unsigned int len)               //App 调用系统信息初始化
+unsigned int  SystemInfoInit_App(void * pAppSysInfo,unsigned int len)               //App 调用系统信息初始化
 {
   	//InterFlash_SetBankMode(SINGLE_BANK_MODE); //设置为single bank mode  
-	
+	unsigned char *pTemp=NULL;
+	unsigned int  lastlen=0;
 	gstSystemInfo.unBtLoaderSysInfoSize=0;
 	gstSystemInfo.unAppSysInfoSize=0; 
 	SYS_INFO_SECTOR_SIZE=(SYS_INFO_CTRL_STRUCT_SIZE+APP_SYS_INFO_SIZE+BOOT_SYS_INFO_SIZE);      //初始化总长度 
@@ -407,22 +404,31 @@ void SystemInfoInit_App(void * pAppSysInfo,unsigned int len)               //App
 		EraseSysInfoBlock();
 		SaveSysInfo();
 		SaveSysInfo();  
+		lastlen=gstSystemInfo.unAppSysInfoSize;
 	}
 	else  if(gstSystemInfo.unAppSysInfoSize!=len)
 	{ 
+		lastlen=gstSystemInfo.unAppSysInfoSize;
 		gstSystemInfo.unBtLoaderSysInfoSize=BOOT_LOADER_SYS_INFO_SIZE;
 		gstSystemInfo.pucBtLoaderSysInfo=(unsigned char *)&gstUpdate;      //取升级结构ram地址 
 		
-		gstSystemInfo.pucAppSysInfo=pAppSysInfo;                           //取APP数据指针
+		gstSystemInfo.pucAppSysInfo=pTemp;                           //取APP数据指针
 		//gstSystemInfo.unAppSysInfoSize=len;   
-		
+		pTemp=malloc(gstSystemInfo.unAppSysInfoSize);
 		
 		SYS_INFO_SECTOR_SIZE=(SYS_INFO_CTRL_STRUCT_SIZE+APP_SYS_INFO_SIZE+BOOT_SYS_INFO_SIZE);      //初始化总长度   
 		gstSystemInfo.unBlockDevideCntAmount= (NV_SIZE_MAX /SYS_INFO_SECTOR_SIZE);  
 		
 		RefreshCurrentRam();  //复位后第一次初始化（将ram上的数据指针保存下来）
 		
-		gstSystemInfo.unAppSysInfoSize=len;   
+		gstSystemInfo.unAppSysInfoSize=len;       //App 信息长度重新赋值
+		gstSystemInfo.pucAppSysInfo=pAppSysInfo;		 //App 数据地址重新赋值
+		memcpy(gstSystemInfo.pucAppSysInfo,pTemp,gstSystemInfo.unAppSysInfoSize);//数据拷贝到app用户信息地址 
+		free(pTemp);
+		pTemp=NULL;
+		
+		SYS_INFO_SECTOR_SIZE=(SYS_INFO_CTRL_STRUCT_SIZE+APP_SYS_INFO_SIZE+BOOT_SYS_INFO_SIZE);      //初始化总长度   
+		gstSystemInfo.unBlockDevideCntAmount= (NV_SIZE_MAX /SYS_INFO_SECTOR_SIZE);  
 		
 		gstSystemInfo.unPos=UNSIGNED_INT_VAL_MAX;	        //存两次做一次备份
 		EraseSysInfoBlock();
@@ -431,6 +437,7 @@ void SystemInfoInit_App(void * pAppSysInfo,unsigned int len)               //App
 	} 
 	else             //长度没有更改
 	{
+		lastlen=gstSystemInfo.unAppSysInfoSize;
 		gstSystemInfo.unBtLoaderSysInfoSize=BOOT_LOADER_SYS_INFO_SIZE;
 		gstSystemInfo.pucBtLoaderSysInfo=(unsigned char *)&gstUpdate;      //取升级结构ram地址 
 		
@@ -441,6 +448,7 @@ void SystemInfoInit_App(void * pAppSysInfo,unsigned int len)               //App
 		gstSystemInfo.unBlockDevideCntAmount= (NV_SIZE_MAX /SYS_INFO_SECTOR_SIZE);  
 		RefreshCurrentRam(); //复位后第一次初始化（将ram上的数据指针保存下来）
 	}
+	return lastlen;
 }
 
 

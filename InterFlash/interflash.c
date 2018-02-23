@@ -26,7 +26,7 @@ const unsigned char cgcFlashSector_K[BANK_MODE][SECTOR_COUNT_MAX]={           //
 																 },
 																	 //SINGLE BANK
 																 {	 31,31,31,31,                        //sector0~3
-																	 127,                               //sector4
+																	 127,                                 //sector4
 																	 255,255,255,255,255,255,255,         //sector5~11
 																	 0,0,0,0,0, 0,0,0,0,0, 0,0,  }
 };  
@@ -87,7 +87,7 @@ static int  CheckErase(unsigned int addr ,unsigned int len)
   * @param  addr: 写入地址
   * @retval 返回0 ：正确 ，1：错误
   */
-static int  CheckProgram(unsigned char *buf ,unsigned int len,unsigned int addr)
+int  CheckProgram(unsigned char *buf ,unsigned int len,unsigned int addr)
 {
 	unsigned int cnt =0;
 	unsigned char *pData=(uint8_t*)addr;
@@ -171,8 +171,8 @@ int InterFlash_Program(unsigned int useraddr,void* pBuf,unsigned int DataCnt_Byt
 		{ 
 			case FLASH_TYPEPROGRAM_BYTE:
 				 Status=HAL_FLASH_Program(DataType,Addr,p8Data[cnt]);   //写入byte
-				 if(CheckProgram(p8Data,DataMax,useraddr)==1)
-					 while(1);
+//				 if(CheckProgram(p8Data,DataMax,useraddr)==1)
+//					 while(1);
 				 break;
 			case FLASH_TYPEPROGRAM_HALFWORD:
 				 Status=HAL_FLASH_Program(DataType,Addr,p16Data[cnt]);  //写入halfword
